@@ -57,7 +57,14 @@
   .pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:13px;background:#fff;border:1px solid var(--line);color:var(--muted)}
   .pill.brand{background:var(--brand-soft);border-color:#f7c78a;color:#7a4300}
   label.f{display:block;font-weight:600;font-size:14px;margin:0 0 6px}
-  select,input[type=text],textarea{width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;font:inherit;background:#fff}
+  .lg label.f{font-size:16px;font-weight:700;margin-top:14px}
+  .lg input[type=text],.lg input[type=password]{font-size:20px;padding:13px 14px;min-height:54px;border:2px solid #9E9E9E;border-radius:12px}
+  .lg input:focus{border-color:var(--brand)}
+  .lg input.pinbox{letter-spacing:6px;font-weight:700}
+  .pinrow{display:flex;gap:8px;align-items:stretch} .pinrow input{flex:1;min-width:0}
+  .pinrow button{border:2px solid #9E9E9E;background:#fff;border-radius:12px;padding:0 14px;font-weight:600;min-width:72px}
+  .pinhint{font-size:13px;color:var(--muted);margin-top:6px}
+  select,input[type=text],input[type=password],textarea{width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;font:inherit;background:#fff}
   .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
   .spacer{flex:1}
   .qtext{font-size:18px;font-weight:600;margin:6px 0 14px;direction:ltr;text-align:left;unicode-bidi:plaintext}
@@ -125,7 +132,7 @@
 <script>
 /* ------------------------------------------------------------ text (English / Arabic) */
 var T = {
-  en:{loginTitle:'Sign in',loginSub:'Use your university ID and a PIN. Your progress is saved to your ID, so you can continue from any device.',uniId:'University ID',pin:'PIN (4–8 digits)',signIn:'Sign in',newHere:'No account yet for this ID. Confirm your PIN to create it.',confirmPin:'Confirm PIN',createAcc:'Create account',pinMismatch:'The two PINs do not match.',signOut:'Sign out',signedAs:'Signed in as',BAD_ID:'Enter your university ID (numbers only).',BAD_PIN:'The PIN must be 4–8 digits.',WRONG_PIN:'Wrong PIN. Try again.',LOCKED:'Too many wrong attempts. Wait 15 minutes and try again.',forgotPin:'Forgot your PIN? Ask your instructor to reset it.',back:'Back',home:'Home',practice:'Practice',exam:'Mock exam',progress:'My progress',lang:'العربية',
+  en:{loginTitle:'Sign in',loginSub:'Use your university ID and a PIN. Your progress is saved to your ID, so you can continue from any device.',uniId:'University ID',pin:'PIN (4–8 digits)',pinHint:'Your PIN is 4–8 digits that you choose. You need it every time you sign in.',showPin:'Show',hidePin:'Hide',signIn:'Sign in',newHere:'No account yet for this ID. Confirm your PIN to create it.',confirmPin:'Confirm PIN',createAcc:'Create account',pinMismatch:'The two PINs do not match.',signOut:'Sign out',signedAs:'Signed in as',BAD_ID:'Enter your university ID (numbers only).',BAD_PIN:'The PIN must be 4–8 digits.',WRONG_PIN:'Wrong PIN. Try again.',LOCKED:'Too many wrong attempts. Wait 15 minutes and try again.',forgotPin:'Forgot your PIN? Ask your instructor to reset it.',back:'Back',home:'Home',practice:'Practice',exam:'Mock exam',progress:'My progress',lang:'العربية',
       welcome:'Train for the PMP® exam',
       heroText:'Practise by PMP domain and task with instant feedback, then sit a timed mock exam built on PMI’s exam outline (July 2026) and see exactly where to improve.',
       startPractice:'Start practising',takeExam:'Take a mock exam',nickname:'Your nickname',nickHint:'Optional. Shown to your instructor next to your ID.',
@@ -151,7 +158,7 @@ var T = {
       weakTopics:'Tasks to work on',practiseWeak:'Practise these tasks',date:'Date',mode:'Exam',view:'View',
       resume:'You have an exam in progress.',resumeBtn:'Continue exam',discard:'Discard',
       loadErr:'Something went wrong. Please try again.',minLeft:'min left',invalidNote:'This attempt is marked as not valid for class statistics (too few answers or too fast).'},
-  ar:{loginTitle:'تسجيل الدخول',loginSub:'ادخل برقمك الجامعي ورمز سري (PIN). تقدّمك ينحفظ على رقمك، فتقدر تكمل من أي جهاز.',uniId:'الرقم الجامعي',pin:'الرمز السري (٤–٨ أرقام)',signIn:'دخول',newHere:'ما فيه حساب بهذا الرقم. أكّد الرمز السري عشان ننشئ حسابك.',confirmPin:'تأكيد الرمز السري',createAcc:'إنشاء الحساب',pinMismatch:'الرمزين مو متطابقين.',signOut:'خروج',signedAs:'مسجّل باسم',BAD_ID:'اكتب رقمك الجامعي (أرقام بس).',BAD_PIN:'الرمز السري لازم يكون من ٤ إلى ٨ أرقام.',WRONG_PIN:'الرمز السري غلط. جرّب مرة ثانية.',LOCKED:'محاولات خاطئة كثيرة. انتظر ١٥ دقيقة وجرّب مرة ثانية.',forgotPin:'نسيت الرمز؟ اطلب من الدكتورة تعيد تعيينه.',back:'رجوع',home:'الرئيسية',practice:'تدريب',exam:'اختبار تجريبي',progress:'تقدّمي',lang:'English',
+  ar:{loginTitle:'تسجيل الدخول',loginSub:'ادخل برقمك الجامعي ورمز سري (PIN). تقدّمك ينحفظ على رقمك، فتقدر تكمل من أي جهاز.',uniId:'الرقم الجامعي',pin:'الرمز السري (٤–٨ أرقام)',pinHint:'الرمز السري أرقام من ٤ إلى ٨ تختارها أنت، وتحتاجه كل مرة تسجّل دخول.',showPin:'إظهار',hidePin:'إخفاء',signIn:'دخول',newHere:'ما فيه حساب بهذا الرقم. أكّد الرمز السري عشان ننشئ حسابك.',confirmPin:'تأكيد الرمز السري',createAcc:'إنشاء الحساب',pinMismatch:'الرمزين مو متطابقين.',signOut:'خروج',signedAs:'مسجّل باسم',BAD_ID:'اكتب رقمك الجامعي (أرقام بس).',BAD_PIN:'الرمز السري لازم يكون من ٤ إلى ٨ أرقام.',WRONG_PIN:'الرمز السري غلط. جرّب مرة ثانية.',LOCKED:'محاولات خاطئة كثيرة. انتظر ١٥ دقيقة وجرّب مرة ثانية.',forgotPin:'نسيت الرمز؟ اطلب من الدكتورة تعيد تعيينه.',back:'رجوع',home:'الرئيسية',practice:'تدريب',exam:'اختبار تجريبي',progress:'تقدّمي',lang:'English',
       welcome:'تدرّب على اختبار PMP®',
       heroText:'تدرّب حسب دومينات ومهام PMP مع تصحيح فوري، ثم اختبر نفسك في اختبار تجريبي بوقت محدد مبني على مخطط PMI (يوليو 2026)، واعرف بالضبط وين تحتاج تتحسن.',
       startPractice:'ابدأ التدريب',takeExam:'ابدأ اختبار تجريبي',nickname:'اسمك المستعار',nickHint:'اختياري. يظهر للدكتورة جنب رقمك الجامعي.',
@@ -259,18 +266,23 @@ function signOut(expired){
 }
 function viewLogin(step){
   var reg = step==='register';
-  var h='<div class="center"><div class="card white" style="max-width:420px;width:100%">'+
+  var h='<div class="center"><div class="card white lg" style="max-width:440px;width:100%">'+
     '<h1 style="margin-top:0">'+esc(t('loginTitle'))+'</h1><p class="muted">'+esc(reg?t('newHere'):t('loginSub'))+'</p>'+
-    '<label class="f" for="lgId">'+esc(t('uniId'))+'</label><input type="text" id="lgId" inputmode="numeric" autocomplete="username" maxlength="12" style="width:100%" value="'+esc(S.loginId||'')+'"'+(reg?' disabled':'')+'>'+
-    '<label class="f" for="lgPin" style="margin-top:10px">'+esc(t('pin'))+'</label><input type="password" id="lgPin" inputmode="numeric" autocomplete="'+(reg?'new-password':'current-password')+'" maxlength="8" style="width:100%" value="'+esc(reg?(S.loginPin||''):'')+'"'+(reg?' disabled':'')+'>'+
-    (reg?'<label class="f" for="lgPin2" style="margin-top:10px">'+esc(t('confirmPin'))+'</label><input type="password" id="lgPin2" inputmode="numeric" autocomplete="new-password" maxlength="8" style="width:100%">'+
+    '<label class="f" for="lgId">'+esc(t('uniId'))+'</label><input type="text" id="lgId" inputmode="numeric" autocomplete="username" maxlength="12" placeholder="2023xxxxx" style="width:100%" value="'+esc(S.loginId||'')+'"'+(reg?' disabled':'')+'>'+
+    '<label class="f" for="lgPin">'+esc(t('pin'))+'</label><div class="pinrow"><input type="password" class="pinbox" id="lgPin" inputmode="numeric" autocomplete="'+(reg?'new-password':'current-password')+'" maxlength="8" placeholder="••••" value="'+esc(reg?(S.loginPin||''):'')+'"'+(reg?' disabled':'')+'><button type="button" data-eye="lgPin" aria-controls="lgPin">'+esc(t('showPin'))+'</button></div>'+(reg?'':'<div class="pinhint">'+esc(t('pinHint'))+'</div>')+
+    (reg?'<label class="f" for="lgPin2">'+esc(t('confirmPin'))+'</label><div class="pinrow"><input type="password" class="pinbox" id="lgPin2" inputmode="numeric" autocomplete="new-password" maxlength="8" placeholder="••••"><button type="button" data-eye="lgPin2" aria-controls="lgPin2">'+esc(t('showPin'))+'</button></div>'+
          '<label class="f" for="lgNick" style="margin-top:10px">'+esc(t('nickname'))+'</label><input type="text" id="lgNick" maxlength="30" style="width:100%" value="'+esc(S.nick||'')+'"><div class="muted" style="font-size:13px">'+esc(t('nickHint'))+'</div>':'')+
     '<div class="err" id="lgErr" role="alert" style="color:#C62828;margin-top:10px;min-height:1em"></div>'+
     '<div class="row" style="margin-top:6px"><button class="btn" id="lgBtn" style="flex:1">'+esc(reg?t('createAcc'):t('signIn'))+'</button>'+(reg?'<button class="btn ghost" id="lgBack">'+esc(t('back'))+'</button>':'')+'</div>'+
     '<p class="muted" style="font-size:13px;margin-bottom:0">'+esc(t('forgotPin'))+'</p></div></div>';
   app().innerHTML=h;
+  app().querySelectorAll('[data-eye]').forEach(function(b){ b.onclick=function(){ var i=document.getElementById(b.getAttribute('data-eye')); var show=i.type==='password'; i.type=show?'text':'password'; b.textContent=t(show?'hidePin':'showPin'); }; });
   var first=document.getElementById(reg?'lgPin2':'lgId'); if(first) first.focus();
-  function err(code){ document.getElementById('lgErr').textContent = code ? (T[S.lang][code] || T.en[code] || code) : ''; }
+  function err(code){
+    document.getElementById('lgErr').textContent = code ? (T[S.lang][code] || T.en[code] || code) : '';
+    var pin=document.getElementById(reg?'lgPin2':'lgPin');
+    if(pin){ var bad=/PIN|pinMismatch/.test(code||''); pin.style.borderColor=bad?'#C62828':''; if(bad) pin.focus(); }
+  }
   function done(r){
     S.sid=r.token; S.uid=r.studentId; store('token',r.token); store('uid',r.studentId);
     if(r.nickname){ S.nick=r.nickname; store('nick',r.nickname); }
@@ -296,7 +308,7 @@ function viewLogin(step){
     }).catch(function(e){ b.disabled=false; err(e.message); });
   }
   document.getElementById('lgBtn').onclick=submit;
-  app().querySelectorAll('input').forEach(function(inp){ inp.onkeydown=function(e){ if(e.key==='Enter') submit(); }; });
+  app().querySelectorAll('input').forEach(function(inp){ inp.onkeydown=function(e){ if(e.key!=='Enter') return; var pin=document.getElementById('lgPin'); if(inp.id==='lgId'&&pin&&!pin.value){ pin.focus(); return; } submit(); }; });
   var bk=document.getElementById('lgBack'); if(bk) bk.onclick=function(){ S.loginPin=''; viewLogin(); };
 }
 /* ------------------------------------------------------------ home */
