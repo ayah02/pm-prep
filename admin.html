@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PM Prep – Instructor dashboard</title>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" defer></script>
 <style>
   :root{--brand:#FA9310;--brand-soft:#FFF3E3;--ink:#1F1F1F;--muted:#5E5E5E;--line:#E3E3E3;--card:#F6F6F6;--ok:#2E7D32;--ok-soft:#E8F5E9;--bad:#C62828;--bad-soft:#FDECEA;--radius:14px}
   *{box-sizing:border-box}
@@ -47,6 +48,9 @@
   .err{color:var(--bad);font-size:14px;margin-top:8px;min-height:18px}
   .note{font-size:13px;color:var(--muted)}
   .hide{display:none!important}
+  .steps{margin:8px 0 0;padding-inline-start:22px} .steps li{margin:10px 0}
+  .ok-msg{background:var(--ok-soft);color:var(--ok);border-radius:10px;padding:10px 12px;font-weight:600}
+  .bad-msg{background:var(--bad-soft);color:var(--bad);border-radius:10px;padding:10px 12px}
 </style>
 </head>
 <body>
@@ -92,9 +96,11 @@ function shell(){
    '<div><label for="fMode">Exam</label><select id="fMode"><option value="course">Course mock exam (60 Q)</option><option value="quick">Quick quiz (20 Q)</option><option value="full">Full-length PMP simulation (180 Q)</option></select></div>'+
    '<div><label for="fFrom">From</label><input type="date" id="fFrom"></div><div><label for="fTo">To</label><input type="date" id="fTo" value="'+today+'"></div>'+
    '<div><label for="fValid">Attempts</label><select id="fValid"><option value="1">Valid only (Table H.2)</option><option value="0">All attempts</option></select></div>'+
-   '<div><button class="btn" id="apply">Apply</button></div><div style="flex:1"></div>'+
+   '<div><button class="btn" id="apply">Apply</button></div><div><button class="btn dark" id="addBtn">＋ Add questions</button></div><div style="flex:1"></div>'+
    '<div><button class="btn ghost" id="expR">Download Responses CSV</button> <button class="btn ghost" id="expA">Download Answers CSV</button> <button class="btn ghost" id="expS">Download Students CSV</button></div></div></div>'+
+   '<div id="addq" class="card white hide" style="margin-top:14px"></div>'+
    '<div id="dash"><div class="center"><div class="muted">Loading…</div></div></div>';
+  $('addBtn').onclick=toggleAdd;
   $('apply').onclick=load; $('expR').onclick=function(){ exportCsv('responses'); }; $('expA').onclick=function(){ exportCsv('answers'); }; $('expS').onclick=function(){ exportCsv('students'); };
 }
 function load(){
@@ -144,6 +150,83 @@ function sorted(list){ var k=SORT.k,dir=SORT.dir; return list.slice().sort(funct
 function flagsHtml(d){
   if(!d.flags.length) return '<h2>Reported questions</h2><p class="muted">No open reports.</p>';
   return '<h2>Reported questions</h2><div class="tablewrap"><table><thead><tr><th>ID</th><th>Reports</th><th>Reasons</th><th>Notes</th></tr></thead><tbody>'+d.flags.map(function(f){ return '<tr><td><b>'+esc(f.id)+'</b></td><td>'+f.count+'</td><td>'+Object.keys(f.reasons).map(function(r){return esc(r)+' ('+f.reasons[r]+')';}).join(', ')+'</td><td>'+f.notes.slice(0,3).map(esc).join('<br>')+'</td></tr>'; }).join('')+'</tbody></table></div><p class="note">To close a report, set its Status to Closed in the Flags sheet. To fix a question, edit it in the Questions sheet (or set Active = FALSE).</p>';
+}
+/* ------------------------------------------------------------ add questions from an Excel template */
+var TPL_COLS=['QuestionID','Status','PMP_Task','Approach','Item_Type','Difficulty','Question','Option_A','Option_B','Option_C','Option_D','Correct_Option','Explanation','Source'];
+var PMP_TASKS=[['I.1','People','Develop a common vision'],['I.2','People','Manage conflicts'],['I.3','People','Lead the project team'],['I.4','People','Engage stakeholders'],['I.5','People','Align stakeholder expectations'],['I.6','People','Manage stakeholder expectations'],['I.7','People','Help ensure knowledge transfer'],['I.8','People','Plan and manage communication'],
+ ['II.1','Process','Develop an integrated project management plan and plan delivery'],['II.2','Process','Develop and manage project scope'],['II.3','Process','Help ensure value-based delivery'],['II.4','Process','Plan and manage resources'],['II.5','Process','Plan and manage procurement'],['II.6','Process','Plan and manage finance'],['II.7','Process','Plan and optimize quality of products/deliverables'],['II.8','Process','Plan and manage schedule'],['II.9','Process','Evaluate project status'],['II.10','Process','Manage project closure'],
+ ['III.1','Business Environment','Define and establish project governance'],['III.2','Business Environment','Plan and manage project compliance'],['III.3','Business Environment','Manage and control changes'],['III.4','Business Environment','Remove impediments and manage issues'],['III.5','Business Environment','Plan and manage risk'],['III.6','Business Environment','Continuous improvement'],['III.7','Business Environment','Support organizational change'],['III.8','Business Environment','Evaluate external business environment changes']];
+var PENDING=null;
+function toggleAdd(){
+  var box=$('addq'); if(!box.classList.contains('hide')){ box.classList.add('hide'); return; }
+  box.classList.remove('hide');
+  box.innerHTML='<h2 style="margin-top:0">Add questions to the bank</h2>'+
+    '<ol class="steps"><li><b>Download the Excel template.</b> <button class="btn ghost" id="tplBtn">Download template</button></li>'+
+    '<li><b>Fill one row per question</b> in the sheet <i>Questions</i>. The sheet <i>Allowed values</i> lists the 26 PMP task codes (I.1–III.8) and the other choices; the sheet <i>Example</i> shows a filled row. Leave QuestionID empty to number new questions automatically (A001, A002 …).</li>'+
+    '<li><b>Upload the filled file.</b> <input type="file" id="upFile" accept=".xlsx,.xls,.csv"> The file is checked first; nothing is added until you confirm.</li></ol>'+
+    '<p class="note">New questions go to <b>Bank</b> (practice, quick quiz and full-length exam) or <b>Reserve</b>. The 60-question course exam set stays fixed so its 20 / 25 / 15 blueprint does not change.</p>'+
+    '<div id="upOut"></div>';
+  $('tplBtn').onclick=downloadTemplate;
+  $('upFile').onchange=function(){ if(this.files[0]) readUpload(this.files[0]); };
+}
+function needXlsx(){ if(!window.XLSX){ $('upOut').innerHTML='<p class="bad-msg">The Excel reader did not load. Check your internet connection and reload the page.</p>'; return false; } return true; }
+function downloadTemplate(){
+  if(!needXlsx()) return;
+  var wb=XLSX.utils.book_new();
+  var q=XLSX.utils.aoa_to_sheet([TPL_COLS]); q['!cols']=[10,9,9,11,11,10,60,30,30,30,30,13,50,20].map(function(w){return {wch:w};});
+  XLSX.utils.book_append_sheet(wb,q,'Questions');
+  var ex=XLSX.utils.aoa_to_sheet([TPL_COLS,['','Bank','III.5','Hybrid','Scenario','Medium','During a sprint review, the team reports that a key supplier may deliver late. What should the project manager do first?','Wait for the supplier to confirm the delay','Assess the risk and update the risk register with a response','Ask the sponsor for more budget','Remove the feature from the backlog','B','A possible late delivery is a risk: assess it and plan a response before it becomes an issue.','Instructor']]);
+  ex['!cols']=q['!cols']; XLSX.utils.book_append_sheet(wb,ex,'Example');
+  var av=[['PMP_Task (code)','PMP domain','Task'],].concat(PMP_TASKS);
+  av.push([],['Approach','Predictive / Agile / Hybrid / Any'],['Item_Type','Scenario / Calculation / Knowledge'],['Difficulty','Easy / Medium / Hard'],['Status','Bank / Reserve (empty = Bank)'],['Correct_Option','A / B / C / D']);
+  var a=XLSX.utils.aoa_to_sheet(av); a['!cols']=[{wch:16},{wch:22},{wch:62}]; XLSX.utils.book_append_sheet(wb,a,'Allowed values');
+  var how=XLSX.utils.aoa_to_sheet([['How to fill the Questions sheet'],[''],['1. One row per question. Do not change the column names in row 1.'],['2. QuestionID: leave empty to number automatically, or use your own new ID (letters and digits).'],['3. PMP_Task: the task code only, e.g. II.6. The PMP domain is set from it.'],['4. Question, Option_A–Option_D and Correct_Option are required; the four options must be different.'],['5. Explanation: why the correct answer is right (shown to students after they answer).'],['6. Save the file and upload it on the instructor page: Add questions → Upload.'],['7. Before a new question is used in a graded exam, two members should check its answer key.']]);
+  how['!cols']=[{wch:100}]; XLSX.utils.book_append_sheet(wb,how,'How to fill');
+  XLSX.writeFile(wb,'PM_Prep_question_template.xlsx');
+}
+function normKey(k){ return String(k).toLowerCase().replace(/[^a-z0-9]/g,''); }
+function readUpload(file){
+  if(!needXlsx()) return;
+  $('upOut').innerHTML='<p class="muted">Reading the file…</p>';
+  var fr=new FileReader();
+  fr.onload=function(){
+    try{
+      var wb=XLSX.read(new Uint8Array(fr.result),{type:'array'});
+      var name=wb.SheetNames.indexOf('Questions')>=0?'Questions':wb.SheetNames[0];
+      var raw=XLSX.utils.sheet_to_json(wb.Sheets[name],{defval:'',raw:false});
+      var map={}; TPL_COLS.forEach(function(c){ map[normKey(c)]=c; });
+      var rows=[];
+      raw.forEach(function(r,i){
+        var o={_row:i+2};
+        Object.keys(r).forEach(function(k){ var c=map[normKey(k)]; if(c) o[c]=String(r[k]).trim(); });
+        if(!(o.Question||o.Option_A||o.Option_B)) return;           // skip empty rows
+        rows.push(o);
+      });
+      if(!rows.length){ $('upOut').innerHTML='<p class="bad-msg">No question rows found in the sheet "'+esc(name)+'".</p>'; return; }
+      if(rows.length>300){ $('upOut').innerHTML='<p class="bad-msg">'+rows.length+' rows found; upload at most 300 at a time.</p>'; return; }
+      $('upOut').innerHTML='<p class="muted">Checking '+rows.length+' rows…</p>';
+      api('adminAddQuestions',TOKEN,rows,true).then(function(r){ PENDING=rows; showCheck(r); })
+        .catch(function(e){ $('upOut').innerHTML='<p class="bad-msg">'+esc(e.message)+'</p>'; });
+    }catch(e){ $('upOut').innerHTML='<p class="bad-msg">This file could not be read. Save it as .xlsx from the template and try again.</p>'; }
+  };
+  fr.readAsArrayBuffer(file);
+}
+function showCheck(r){
+  var h='<h3 style="margin-top:12px">Check result</h3><p><b>'+r.ready+'</b> question'+(r.ready===1?'':'s')+' ready to add'+(r.errors.length?' · <b style="color:var(--bad)">'+r.errors.length+' row'+(r.errors.length===1?'':'s')+' with problems</b> (they will be skipped)':'')+'.</p>';
+  if(r.errors.length) h+='<div class="tablewrap" style="max-height:220px"><table><thead><tr><th>Row</th><th>Problem</th></tr></thead><tbody>'+r.errors.map(function(e){ return '<tr class="fl"><td>'+e.row+'</td><td>'+e.reasons.map(esc).join('<br>')+'</td></tr>'; }).join('')+'</tbody></table></div>';
+  if(r.preview.length) h+='<div class="tablewrap" style="margin-top:10px;max-height:260px"><table><thead><tr><th>New ID</th><th>Task</th><th>Level</th><th>Key</th><th>Question</th></tr></thead><tbody>'+r.preview.map(function(p){ return '<tr><td><b>'+esc(p.id)+'</b></td><td>'+esc(p.task)+'</td><td>'+esc(p.level)+'</td><td>'+esc(p.key)+'</td><td>'+esc(p.text)+'</td></tr>'; }).join('')+'</tbody></table></div>'+(r.ready>r.preview.length?'<p class="note">Showing the first '+r.preview.length+' of '+r.ready+'.</p>':'');
+  if(r.ready) h+='<div class="row" style="margin-top:12px"><button class="btn" id="confirmAdd">Add '+r.ready+' question'+(r.ready===1?'':'s')+' to the bank</button><button class="btn ghost" id="cancelAdd">Cancel</button></div>';
+  $('upOut').innerHTML=h;
+  if(r.ready){
+    $('cancelAdd').onclick=function(){ PENDING=null; $('upFile').value=''; $('upOut').innerHTML=''; };
+    $('confirmAdd').onclick=function(){
+      this.disabled=true; this.textContent='Adding…';
+      api('adminAddQuestions',TOKEN,PENDING,false).then(function(x){
+        PENDING=null; $('upFile').value='';
+        $('upOut').innerHTML='<p class="ok-msg">Added '+x.added+' question'+(x.added===1?'':'s')+(x.ids.length?' ('+esc(x.ids[0])+(x.ids.length>1?' – '+esc(x.ids[x.ids.length-1]):'')+')':'')+'. The bank now has '+x.bankSize+' questions; students see them in practice right away.</p>'+(x.errors.length?'<p class="note">'+x.errors.length+' row(s) were skipped.</p>':'');
+      }).catch(function(e){ $('upOut').innerHTML='<p class="bad-msg">'+esc(e.message)+'</p>'; });
+    };
+  }
 }
 function exportCsv(which){
   api('adminExport',TOKEN,which).then(function(rows){
