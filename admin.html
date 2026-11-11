@@ -77,7 +77,7 @@ function api(fn){
           function(e){ throw (e && /Server error|Request failed/.test(e.message)) ? e : new Error('Connection problem. Check your internet and try again.'); });
 }
 function $(id){ return document.getElementById(id); }
-
+ 
 $('loginBtn').onclick=login; $('pw').onkeydown=function(e){ if(e.key==='Enter') login(); };
 function login(){
   $('err').textContent=''; $('loginBtn').disabled=true;
@@ -92,9 +92,9 @@ function shell(){
    '<div><label for="fFrom">From</label><input type="date" id="fFrom"></div><div><label for="fTo">To</label><input type="date" id="fTo" value="'+today+'"></div>'+
    '<div><label for="fValid">Attempts</label><select id="fValid"><option value="1">Valid only (Table H.2)</option><option value="0">All attempts</option></select></div>'+
    '<div><button class="btn" id="apply">Apply</button></div><div style="flex:1"></div>'+
-   '<div><button class="btn ghost" id="expR">Download Responses CSV</button> <button class="btn ghost" id="expA">Download Answers CSV</button></div></div></div>'+
+   '<div><button class="btn ghost" id="expR">Download Responses CSV</button> <button class="btn ghost" id="expA">Download Answers CSV</button> <button class="btn ghost" id="expS">Download Students CSV</button></div></div></div>'+
    '<div id="dash"><div class="center"><div class="muted">Loading…</div></div></div>';
-  $('apply').onclick=load; $('expR').onclick=function(){ exportCsv('responses'); }; $('expA').onclick=function(){ exportCsv('answers'); };
+  $('apply').onclick=load; $('expR').onclick=function(){ exportCsv('responses'); }; $('expA').onclick=function(){ exportCsv('answers'); }; $('expS').onclick=function(){ exportCsv('students'); };
 }
 function load(){
   $('dash').innerHTML='<div class="center"><div class="muted">Loading…</div></div>';
@@ -105,7 +105,7 @@ function load(){
 function kpi(label,value,target,good){ var cls=good==null?'neu':(good?'okb':'badb'); return '<div class="card kpi '+cls+'"><div class="muted">'+esc(label)+'</div><div class="v">'+value+'</div><div class="tgt">'+esc(target)+(good===false?' <b style="color:var(--bad)">· below target</b>':'')+'</div></div>'; }
 function draw(){
   var d=DATA, pm=d.passMark;
-  $('sub').textContent=d.modeLabel+' · '+d.responses+' attempts counted'+(d.allResponses!==d.responses?' ('+d.allResponses+' in total)':'');
+  $('sub').textContent=d.modeLabel+' · '+d.responses+' attempts counted'+(d.allResponses!==d.responses?' ('+d.allResponses+' in total)':'')+' · '+d.registered+' students registered';
   if(!d.responses){ $('dash').innerHTML='<div class="card" style="margin-top:14px"><b>No attempts yet for these filters.</b><p class="muted">Share the student link and come back once people have taken the exam. Data is saved in <a href="'+esc(d.sheetUrl)+'" target="_blank">the Google Sheet</a>.</p></div>'+flagsHtml(d); return; }
   var h='<div class="grid k4" style="margin-top:14px">'+
     kpi('Average score',pct(d.avgScore),'Target ≥ 70%',d.avgScore>=pm)+
@@ -118,6 +118,8 @@ function draw(){
   h+='<div class="card"><h3>Score distribution <span class="muted" style="font-weight:400">(green = 70% and above)</span></h3><div class="hist">'+d.histogram.map(function(n,i){ return '<div class="'+(i>=7?'pass':'')+'" style="height:'+Math.round(n/max*100)+'%" title="'+n+' attempts"><span>'+(n||'')+'</span></div>'; }).join('')+'</div><div class="hlab">'+d.histogram.map(function(n,i){ return '<div>'+(i*10)+'–'+(i*10+9)+'</div>'; }).join('')+'</div></div></div>';
   h+='<div class="card" style="margin-top:14px"><h3>Accuracy by lecture / topic, lowest first <span class="muted" style="font-weight:400">(the 3 lowest are flagged for re-teaching)</span></h3>'+
     d.byLecture.map(function(x){ return '<div class="metric"><div>L'+x.lecture+' · '+esc(x.name)+(x.flag?'<span class="flag">⚑ re-teach</span>':'')+' <span class="muted">('+x.attempts+' answers)</span></div><b>'+pct(x.accuracy)+'</b><div class="bar '+(x.flag?'bad':(x.accuracy>=pm?'ok':''))+'" style="grid-column:1/-1"><i style="width:'+Math.round(x.accuracy*100)+'%"></i><span class="line" style="left:'+Math.round(pm*100)+'%"></span></div></div>'; }).join('')+'</div>';
+  h+='<h2>Students</h2><p class="note">One row per university ID for the selected exam and period. Ready = best score at or above 70%. A student who forgot the PIN: clear the PinHash cell of that ID in the Students sheet, then the student signs in again and chooses a new PIN.</p><div class="tablewrap"><table><thead><tr><th>University ID</th><th>Nickname</th><th>Attempts</th><th>Best</th><th>Last</th><th>Average</th><th>Last attempt</th><th>Ready</th></tr></thead><tbody>'+
+    d.students.map(function(x){ return '<tr><td><b>'+esc(x.studentId)+'</b></td><td>'+esc(x.nickname)+'</td><td>'+x.attempts+'</td><td><b>'+pct(x.best)+'</b></td><td>'+pct(x.last)+'</td><td>'+pct(x.avg)+'</td><td>'+esc(String(x.lastDate).replace('T',' ').slice(0,16))+'</td><td>'+(x.ready?'<span style="color:var(--ok);font-weight:700">✓</span>':'<span style="color:var(--bad)">✗</span>')+'</td></tr>'; }).join('')+'</tbody></table></div>';
   h+='<h2>Question analysis</h2><p class="note">p-value = share of candidates who answered correctly (flagged below 0.30 or above 0.90). Top distractor = most-chosen wrong option (flagged above 40%). Click a column to sort.</p><div class="tablewrap"><table id="qt"><thead><tr>'+
     [['id','ID'],['text','Question'],['domain','Dom.'],['lecture','Lec.'],['attempts','Answers'],['p','p-value'],['key','Key'],['topDistractor','Top wrong'],['distractorShare','Share']].map(function(c){ return '<th data-k="'+c[0]+'">'+c[1]+(SORT.k===c[0]?(SORT.dir>0?' ▲':' ▼'):'')+'</th>'; }).join('')+'</tr></thead><tbody>'+
     sorted(d.questions).map(function(q){ var f=q.flagP||q.flagDistractor; return '<tr class="'+(f?'fl':'')+'"><td><b>'+esc(q.id)+'</b></td><td>'+esc(q.text.length>110?q.text.slice(0,107)+'…':q.text)+'</td><td>'+q.domain+'</td><td>'+q.lecture+'</td><td>'+q.attempts+'</td><td><b>'+(q.p==null?'–':q.p.toFixed(2))+'</b>'+(q.flagP?' ⚑':'')+'</td><td>'+q.key+'</td><td>'+esc(q.topDistractor)+'</td><td>'+(q.topDistractor?pct(q.distractorShare):'–')+(q.flagDistractor?' ⚑':'')+'</td></tr>'; }).join('')+'</tbody></table></div>';
@@ -134,9 +136,10 @@ function flagsHtml(d){
 function exportCsv(which){
   api('adminExport',TOKEN,which).then(function(rows){
     var csv=rows.map(function(r){ return r.map(function(v){ v=String(v==null?'':v); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }).join(','); }).join('\r\n');
-    var a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv'})); a.download=(which==='answers'?'Answers':'Responses')+'.csv'; document.body.appendChild(a); a.click(); a.remove();
+    var a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv'})); a.download=(which==='answers'?'Answers':which==='students'?'Students':'Responses')+'.csv'; document.body.appendChild(a); a.click(); a.remove();
   }).catch(function(e){ alert(e.message); });
 }
 </script>
 </body>
 </html>
+ 
