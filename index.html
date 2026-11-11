@@ -121,7 +121,7 @@
 </div></header>
 <main id="app"><div class="center"><div><div class="spin"></div><div class="muted">Loading…</div></div></div></main>
 <footer id="foot"></footer>
- 
+
 <script>
 /* ------------------------------------------------------------ text (English / Arabic) */
 var T = {
@@ -139,7 +139,7 @@ var T = {
       summary:'Practice summary',again:'Practise again',
       examTitle:'Mock exams',examText:'Timed, no feedback until you submit – just like the real exam. Your answers are saved as you go.',
       minutes:'minutes',questions:'questions',start:'Start',consentTitle:'Before you start',
-      consent:'This exam is anonymous and for practice only. No name or student ID is collected. Results are used only in aggregate for a class project at Al Yamamah University.',
+      consent:'This exam is for practice only. Your result is saved to your university ID so you and your instructor can follow your progress. Results are also used in aggregate for a class project at Al Yamamah University.',
       agree:'I understand – start the exam',question:'Question',of:'of',prev:'Previous',markReview:'Mark for review',marked:'Marked',
       submit:'Submit exam',navigator:'Questions',legAns:'Answered',legMark:'Marked',legCur:'Current',
       confirmSubmit:'Submit your exam?',unanswered:'unanswered questions',submitNow:'Submit now',keepGoing:'Keep working',
@@ -165,7 +165,7 @@ var T = {
       summary:'ملخص التدريب',again:'تدرّب مرة ثانية',
       examTitle:'الاختبارات التجريبية',examText:'بوقت محدد، وبدون تصحيح لين تسلّم – مثل الاختبار الحقيقي. إجاباتك تنحفظ أول بأول.',
       minutes:'دقيقة',questions:'سؤال',start:'ابدأ',consentTitle:'قبل ما تبدأ',
-      consent:'هذا الاختبار بدون اسم وللتدريب فقط. ما نجمع اسمك أو رقمك الجامعي. النتائج تستخدم بشكل مجمّع فقط لمشروع مادة في جامعة اليمامة.',
+      consent:'هذا الاختبار للتدريب فقط. نتيجتك تنحفظ على رقمك الجامعي عشان تتابع تقدّمك أنت والدكتورة. النتائج تستخدم بعد بشكل مجمّع لمشروع مادة في جامعة اليمامة.',
       agree:'فهمت – ابدأ الاختبار',question:'سؤال',of:'من',prev:'السابق',markReview:'علّمه للمراجعة',marked:'معلّم',
       submit:'تسليم الاختبار',navigator:'الأسئلة',legAns:'مجاوب',legMark:'معلّم',legCur:'الحالي',
       confirmSubmit:'تبي تسلّم الاختبار؟',unanswered:'سؤال بدون إجابة',submitNow:'سلّم الحين',keepGoing:'كمّل',
@@ -181,7 +181,7 @@ var T = {
 var MODE_AR = {course:'الاختبار التجريبي للمادة',full:'اختبار كامل الطول',quick:'اختبار سريع'};
 var DIFF_AR = {Easy:'سهل',Medium:'متوسط',Hard:'صعب'};
 var DOM_AR = {1:'الأساسيات والمفاهيم',2:'المنهج التنبؤي',3:'أطر Agile'};
- 
+
 /* ------------------------------------------------------------ state + storage */
 var S = { cfg:null, view:'home', lang:'en', sid:'', uid:'', nick:'', practice:null, exam:null, result:null, progress:null };
 function store(k,v){ try{ if(v===undefined) return JSON.parse(localStorage.getItem('pmprep_'+k)); if(v===null) localStorage.removeItem('pmprep_'+k); else localStorage.setItem('pmprep_'+k, JSON.stringify(v)); }catch(e){ return null; } }
@@ -192,7 +192,7 @@ function modeLabel(k){ return S.lang==='ar' ? (MODE_AR[k]||k) : (S.cfg && S.cfg.
 function domName(d){ return S.lang==='ar' ? DOM_AR[d] : S.cfg.domains[d]; }
 function lecName(l, name){ return (S.lang==='ar'?'المحاضرة ':'L') + l + ' · ' + (name||''); }
 function newId(){ var a='abcdefghijklmnopqrstuvwxyz0123456789',s=''; var r=(window.crypto&&crypto.getRandomValues)?crypto.getRandomValues(new Uint8Array(24)):null; for(var i=0;i<24;i++) s+=a[(r?r[i]:Math.floor(Math.random()*256))%36]; return 's-'+s; }
- 
+
 /* ------------------------------------------------------------ server calls */
 var API_URL='https://script.google.com/macros/s/AKfycby9n5U5gExg5Jd-n0nVj6GCcUKsU2e_ZqJl_b6kyS9OGbo04Zf2FUwx0iij5y-TcA-n/exec';
 function api(fn){
@@ -213,7 +213,7 @@ api=function(){ return api0.apply(null,arguments).catch(function(e){ if(e && /si
 function toast(msg){ var d=document.createElement('div'); d.className='toast'; d.setAttribute('role','status'); d.textContent=msg; document.body.appendChild(d); setTimeout(function(){d.remove();},3200); }
 function loading(msg){ app().innerHTML='<div class="center"><div><div class="spin"></div><div class="muted">'+esc(msg||'…')+'</div></div></div>'; }
 function app(){ return document.getElementById('app'); }
- 
+
 /* ------------------------------------------------------------ shell */
 function setLang(l){
   S.lang=l; store('lang',l);
@@ -247,7 +247,7 @@ function render(){
   if(v==='result') return viewResult();
   if(v==='progress') return viewProgress();
 }
- 
+
 /* ------------------------------------------------------------ sign in */
 function signOut(expired){
   ['token','uid','exam'].forEach(function(k){ store(k,null); });
@@ -299,7 +299,7 @@ function viewLogin(step){
 /* ------------------------------------------------------------ home */
 function viewHome(){
   var saved=store('exam');
-  var h='<section class="hero"><div style="font-weight:700;letter-spacing:.5px;color:var(--brand);margin-bottom:6px">Practice. Track. Pass.</div><h1>'+esc(t('welcome'))+'</h1><p>'+esc(t('heroText'))+'</p><div class="row" style="margin-top:14px"><button class="btn" data-go="practice">'+esc(t('startPractice'))+'</button><button class="btn ghost" style="color:#fff;border-color:rgba(255,255,255,.5)" data-go="exam">'+esc(t('takeExam'))+'</button></div></section>';
+  var h='<section class="hero"><div style="font-weight:700;letter-spacing:.5px;color:var(--brand);margin-bottom:6px"><span dir="ltr">Practice. Track. Pass.</span></div><h1>'+esc(t('welcome'))+'</h1><p>'+esc(t('heroText'))+'</p><div class="row" style="margin-top:14px"><button class="btn" data-go="practice">'+esc(t('startPractice'))+'</button><button class="btn ghost" style="color:#fff;border-color:rgba(255,255,255,.5)" data-go="exam">'+esc(t('takeExam'))+'</button></div></section>';
   if(saved) h+='<div class="card white" style="margin-top:14px;border-color:var(--brand)"><div class="row"><b>'+esc(t('resume'))+'</b> <span class="muted">'+esc(modeLabel(saved.mode))+'</span><span class="spacer"></span><button class="btn small" id="resumeBtn">'+esc(t('resumeBtn'))+'</button></div></div>';
   h+='<div class="grid g3" style="margin-top:14px" id="homeStats"><div class="card"><div class="muted">'+esc(t('answered'))+'</div><div class="stat" id="hsA">…</div></div><div class="card"><div class="muted">'+esc(t('accuracy'))+'</div><div class="stat" id="hsB">…</div></div><div class="card"><div class="muted">'+esc(t('weakest'))+'</div><div style="font-weight:700;margin-top:6px" id="hsC">…</div></div></div>';
   h+='<div class="card" style="margin-top:14px"><label class="f" for="nick">'+esc(t('nickname'))+'</label><div class="row"><input type="text" id="nick" maxlength="30" style="max-width:300px" value="'+esc(S.nick)+'"><button class="btn small dark" id="saveNick">'+esc(t('save'))+'</button></div><div class="muted" style="font-size:13px;margin-top:6px">'+esc(t('nickHint'))+'</div></div>';
@@ -317,7 +317,7 @@ function viewHome(){
   }).catch(function(){});
 }
 function bindGo(){ app().querySelectorAll('[data-go]').forEach(function(b){ b.onclick=function(){ go(b.getAttribute('data-go')); }; }); }
- 
+
 /* ------------------------------------------------------------ practice */
 function viewPracticeSetup(){
   var c=S.cfg, last=store('pfilters')||{};
@@ -383,7 +383,7 @@ function flagDialog(qid){
   m.querySelector('#fC').onclick=function(){ m.remove(); };
   m.querySelector('#fS').onclick=function(){ var b=this; b.disabled=true; api('flagQuestion',S.sid,qid,m.querySelector('#fR').value,m.querySelector('#fN').value).then(function(){ m.remove(); toast(t('thanks')); }).catch(function(e){ b.disabled=false; toast(e.message); }); };
 }
- 
+
 /* ------------------------------------------------------------ exams */
 function viewExamList(){
   var saved=store('exam');
@@ -487,7 +487,7 @@ function viewResult(){
   app().querySelectorAll('[data-f]').forEach(function(b){ b.onclick=function(){ S.reviewFilter=b.getAttribute('data-f'); viewResult(); }; });
   app().querySelectorAll('[data-flag]').forEach(function(b){ b.onclick=function(){ flagDialog(b.getAttribute('data-flag')); }; });
 }
- 
+
 /* ------------------------------------------------------------ progress */
 function viewProgress(){
   loading();
@@ -503,7 +503,7 @@ function viewProgress(){
     app().querySelectorAll('[data-r]').forEach(function(b){ b.onclick=function(){ loading(); api('getAttemptResult',S.sid,b.getAttribute('data-r')).then(function(r){ S.result=r; S.reviewFilter='all'; go('result'); }).catch(function(e){ toast(e.message); go('progress'); }); }; });
   }).catch(function(e){ app().innerHTML='<p>'+esc(e.message||t('loadErr'))+'</p>'; });
 }
- 
+
 /* ------------------------------------------------------------ boot */
 (function boot(){
   S.sid=store('token')||''; S.uid=store('uid')||''; store('sid',null);
@@ -522,4 +522,3 @@ function viewProgress(){
 </script>
 </body>
 </html>
- 
