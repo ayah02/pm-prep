@@ -40,6 +40,7 @@
   th,td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
   th{background:#fafafa;position:sticky;top:0;cursor:pointer;user-select:none}
   tr.fl td{background:var(--bad-soft)}
+  table.mx td{text-align:center} table.mx td:first-child{text-align:start} table.mx td.lo{background:#fdecea;color:#b3261e} table.mx td.hi{background:#e8f5e9}
   .tablewrap{max-height:520px;overflow:auto;border:1px solid var(--line);border-radius:12px}
   .center{display:grid;place-items:center;min-height:50vh}
   .login{max-width:360px;width:100%}
@@ -77,7 +78,7 @@ function api(fn){
           function(e){ throw (e && /Server error|Request failed/.test(e.message)) ? e : new Error('Connection problem. Check your internet and try again.'); });
 }
 function $(id){ return document.getElementById(id); }
- 
+
 $('loginBtn').onclick=login; $('pw').onkeydown=function(e){ if(e.key==='Enter') login(); };
 function login(){
   $('err').textContent=''; $('loginBtn').disabled=true;
@@ -112,17 +113,31 @@ function draw(){
     kpi('Readiness rate',pct(d.readiness),'% of attempts scoring ≥ 70% · target ≥ 60%',d.readiness>=0.6)+
     kpi('Median completion time',d.medianMinutes==null?'–':Math.round(d.medianMinutes)+' min','Target ≤ 75 min (course exam)',d.mode==='course'?d.medianMinutes<=75:null)+
     kpi('Attempts',String(d.responses),'Valid attempts in the selected period',null)+'</div>';
-  h+='<div class="grid g2" style="margin-top:14px"><div class="card"><h3>Accuracy by domain <span class="muted" style="font-weight:400">(line = 65%)</span></h3>'+
+  h+='<div class="grid g2" style="margin-top:14px"><div class="card"><h3>Accuracy by course domain <span class="muted" style="font-weight:400">(line = 65%)</span></h3>'+
     d.byDomain.map(function(x){ var low=x.accuracy!=null&&x.accuracy<d.domainFlag; return '<div class="metric"><div>'+x.domain+' · '+esc(x.name)+(low?'<span class="flag">⚑ below 65%</span>':'')+'</div><b>'+pct(x.accuracy)+'</b><div class="bar '+(x.accuracy==null?'':(low?'bad':'ok'))+'" style="grid-column:1/-1"><i style="width:'+(x.accuracy==null?0:Math.round(x.accuracy*100))+'%"></i><span class="line" style="left:'+Math.round(d.domainFlag*100)+'%"></span></div></div>'; }).join('')+'</div>';
   var max=Math.max.apply(null,d.histogram.concat([1]));
   h+='<div class="card"><h3>Score distribution <span class="muted" style="font-weight:400">(green = 70% and above)</span></h3><div class="hist">'+d.histogram.map(function(n,i){ return '<div class="'+(i>=7?'pass':'')+'" style="height:'+Math.round(n/max*100)+'%" title="'+n+' attempts"><span>'+(n||'')+'</span></div>'; }).join('')+'</div><div class="hlab">'+d.histogram.map(function(n,i){ return '<div>'+(i*10)+'–'+(i*10+9)+'</div>'; }).join('')+'</div></div></div>';
+  if(d.byPmp){
+    h+='<div class="grid g2" style="margin-top:14px"><div class="card"><h3>Accuracy by PMP domain <span class="muted" style="font-weight:400">(PMI exam outline, July 2026 · line = 65%)</span></h3>'+
+      d.byPmp.map(function(x){ var low=x.accuracy!=null&&x.accuracy<d.domainFlag; return '<div class="metric"><div>'+esc(x.pmp)+' <span class="muted">(exam weight '+pct(x.weight)+' · '+x.attempts+' answers)</span>'+(low?'<span class="flag">⚑ below 65%</span>':'')+'</div><b>'+pct(x.accuracy)+'</b><div class="bar '+(x.accuracy==null?'':(low?'bad':'ok'))+'" style="grid-column:1/-1"><i style="width:'+(x.accuracy==null?0:Math.round(x.accuracy*100))+'%"></i><span class="line" style="left:'+Math.round(d.domainFlag*100)+'%"></span></div></div>'; }).join('')+
+      '<p class="note" style="margin:8px 0 0">Each question is tagged with the PMP domain and task it trains (PMI exam outline, July 2026).</p></div>';
+    h+='<div class="card"><h3>Weakest PMP tasks <span class="muted" style="font-weight:400">(lowest accuracy first, at least 10 answers)</span></h3>'+
+      d.pmpTasks.filter(function(x){return x.attempts>=10;}).slice(0,6).map(function(x){ return '<div class="metric"><div><b>'+esc(x.task)+'</b> '+esc(x.name)+' <span class="muted">('+esc(x.pmp)+' · '+x.attempts+')</span></div><b>'+pct(x.accuracy)+'</b><div class="bar '+(x.accuracy>=pm?'ok':'bad')+'" style="grid-column:1/-1"><i style="width:'+Math.round(x.accuracy*100)+'%"></i><span class="line" style="left:'+Math.round(pm*100)+'%"></span></div></div>'; }).join('')+'</div></div>';
+  }
+  if(d.byLevel){
+    h+='<div class="grid g2" style="margin-top:14px"><div class="card"><h3>Accuracy by level <span class="muted" style="font-weight:400">(Easy / Medium / Hard · line = 70%)</span></h3>'+
+      d.byLevel.map(function(x){ return '<div class="metric"><div>'+esc(x.level)+' <span class="muted">('+x.attempts+' answers)</span></div><b>'+pct(x.accuracy)+'</b><div class="bar '+(x.accuracy==null?'':(x.accuracy>=pm?'ok':'bad'))+'" style="grid-column:1/-1"><i style="width:'+(x.accuracy==null?0:Math.round(x.accuracy*100))+'%"></i><span class="line" style="left:'+Math.round(pm*100)+'%"></span></div></div>'; }).join('')+'</div>';
+    h+='<div class="card"><h3>Domain × level <span class="muted" style="font-weight:400">(accuracy · red = below 65%)</span></h3><div style="overflow-x:auto"><table class="mx"><thead><tr><th>Domain</th>'+d.levels.map(function(l){return '<th>'+esc(l)+'</th>';}).join('')+'</tr></thead><tbody>'+
+      d.domainLevel.map(function(r){ return '<tr><td><b>'+r.domain+'</b> · '+esc(r.name)+'</td>'+r.cells.map(function(c){ var low=c.accuracy!=null&&c.accuracy<d.domainFlag; return '<td class="'+(c.accuracy==null?'':(low?'lo':'hi'))+'"><b>'+pct(c.accuracy)+'</b>'+(low?' ⚑':'')+'<div class="muted" style="font-size:11px">'+c.attempts+' answers</div></td>'; }).join('')+'</tr>'; }).join('')+
+      '</tbody></table></div><p class="note" style="margin:8px 0 0">Shows whether a weak domain is weak at every level or only on hard questions.</p></div></div>';
+  }
   h+='<div class="card" style="margin-top:14px"><h3>Accuracy by lecture / topic, lowest first <span class="muted" style="font-weight:400">(the 3 lowest are flagged for re-teaching)</span></h3>'+
     d.byLecture.map(function(x){ return '<div class="metric"><div>L'+x.lecture+' · '+esc(x.name)+(x.flag?'<span class="flag">⚑ re-teach</span>':'')+' <span class="muted">('+x.attempts+' answers)</span></div><b>'+pct(x.accuracy)+'</b><div class="bar '+(x.flag?'bad':(x.accuracy>=pm?'ok':''))+'" style="grid-column:1/-1"><i style="width:'+Math.round(x.accuracy*100)+'%"></i><span class="line" style="left:'+Math.round(pm*100)+'%"></span></div></div>'; }).join('')+'</div>';
   h+='<h2>Students</h2><p class="note">One row per university ID for the selected exam and period. Ready = best score at or above 70%. A student who forgot the PIN: clear the PinHash cell of that ID in the Students sheet, then the student signs in again and chooses a new PIN.</p><div class="tablewrap"><table><thead><tr><th>University ID</th><th>Nickname</th><th>Attempts</th><th>Best</th><th>Last</th><th>Average</th><th>Last attempt</th><th>Ready</th></tr></thead><tbody>'+
     d.students.map(function(x){ return '<tr><td><b>'+esc(x.studentId)+'</b></td><td>'+esc(x.nickname)+'</td><td>'+x.attempts+'</td><td><b>'+pct(x.best)+'</b></td><td>'+pct(x.last)+'</td><td>'+pct(x.avg)+'</td><td>'+esc(String(x.lastDate).replace('T',' ').slice(0,16))+'</td><td>'+(x.ready?'<span style="color:var(--ok);font-weight:700">✓</span>':'<span style="color:var(--bad)">✗</span>')+'</td></tr>'; }).join('')+'</tbody></table></div>';
   h+='<h2>Question analysis</h2><p class="note">p-value = share of candidates who answered correctly (flagged below 0.30 or above 0.90). Top distractor = most-chosen wrong option (flagged above 40%). Click a column to sort.</p><div class="tablewrap"><table id="qt"><thead><tr>'+
-    [['id','ID'],['text','Question'],['domain','Dom.'],['lecture','Lec.'],['attempts','Answers'],['p','p-value'],['key','Key'],['topDistractor','Top wrong'],['distractorShare','Share']].map(function(c){ return '<th data-k="'+c[0]+'">'+c[1]+(SORT.k===c[0]?(SORT.dir>0?' ▲':' ▼'):'')+'</th>'; }).join('')+'</tr></thead><tbody>'+
-    sorted(d.questions).map(function(q){ var f=q.flagP||q.flagDistractor; return '<tr class="'+(f?'fl':'')+'"><td><b>'+esc(q.id)+'</b></td><td>'+esc(q.text.length>110?q.text.slice(0,107)+'…':q.text)+'</td><td>'+q.domain+'</td><td>'+q.lecture+'</td><td>'+q.attempts+'</td><td><b>'+(q.p==null?'–':q.p.toFixed(2))+'</b>'+(q.flagP?' ⚑':'')+'</td><td>'+q.key+'</td><td>'+esc(q.topDistractor)+'</td><td>'+(q.topDistractor?pct(q.distractorShare):'–')+(q.flagDistractor?' ⚑':'')+'</td></tr>'; }).join('')+'</tbody></table></div>';
+    [['id','ID'],['text','Question'],['domain','Dom.'],['pmp','PMP'],['difficulty','Level'],['lecture','Lec.'],['attempts','Answers'],['p','p-value'],['key','Key'],['topDistractor','Top wrong'],['distractorShare','Share']].map(function(c){ return '<th data-k="'+c[0]+'">'+c[1]+(SORT.k===c[0]?(SORT.dir>0?' ▲':' ▼'):'')+'</th>'; }).join('')+'</tr></thead><tbody>'+
+    sorted(d.questions).map(function(q){ var f=q.flagP||q.flagDistractor; return '<tr class="'+(f?'fl':'')+'"><td><b>'+esc(q.id)+'</b></td><td>'+esc(q.text.length>110?q.text.slice(0,107)+'…':q.text)+'</td><td>'+q.domain+'</td><td>'+esc(q.pmpTask||'')+'</td><td>'+esc(q.difficulty||'')+'</td><td>'+q.lecture+'</td><td>'+q.attempts+'</td><td><b>'+(q.p==null?'–':q.p.toFixed(2))+'</b>'+(q.flagP?' ⚑':'')+'</td><td>'+q.key+'</td><td>'+esc(q.topDistractor)+'</td><td>'+(q.topDistractor?pct(q.distractorShare):'–')+(q.flagDistractor?' ⚑':'')+'</td></tr>'; }).join('')+'</tbody></table></div>';
   h+=flagsHtml(d);
   h+='<p class="note" style="margin-top:20px">All data lives in <a href="'+esc(d.sheetUrl)+'" target="_blank">the Google Sheet</a> (sheets Responses and Answers, same columns as the Power BI model). Blank answers count as wrong in the score and are left out of accuracy, as in report Table H.2.</p>';
   $('dash').innerHTML=h;
@@ -142,4 +157,3 @@ function exportCsv(which){
 </script>
 </body>
 </html>
- 
