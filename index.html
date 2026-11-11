@@ -121,14 +121,14 @@
 </div></header>
 <main id="app"><div class="center"><div><div class="spin"></div><div class="muted">Loading…</div></div></div></main>
 <footer id="foot"></footer>
-
+ 
 <script>
 /* ------------------------------------------------------------ text (English / Arabic) */
 var T = {
-  en:{home:'Home',practice:'Practice',exam:'Mock exam',progress:'My progress',lang:'العربية',
+  en:{loginTitle:'Sign in',loginSub:'Use your university ID and a PIN. Your progress is saved to your ID, so you can continue from any device.',uniId:'University ID',pin:'PIN (4–8 digits)',signIn:'Sign in',newHere:'No account yet for this ID. Confirm your PIN to create it.',confirmPin:'Confirm PIN',createAcc:'Create account',pinMismatch:'The two PINs do not match.',signOut:'Sign out',signedAs:'Signed in as',BAD_ID:'Enter your university ID (numbers only).',BAD_PIN:'The PIN must be 4–8 digits.',WRONG_PIN:'Wrong PIN. Try again.',LOCKED:'Too many wrong attempts. Wait 15 minutes and try again.',forgotPin:'Forgot your PIN? Ask your instructor to reset it.',back:'Back',home:'Home',practice:'Practice',exam:'Mock exam',progress:'My progress',lang:'العربية',
       welcome:'Train for your project management exam',
       heroText:'Practise by topic with instant feedback, then sit a timed mock exam built like the real thing and see exactly where to improve.',
-      startPractice:'Start practising',takeExam:'Take a mock exam',nickname:'Your nickname',nickHint:'Shown only to you. No name or student ID needed.',
+      startPractice:'Start practising',takeExam:'Take a mock exam',nickname:'Your nickname',nickHint:'Optional. Shown to your instructor next to your ID.',
       save:'Save',answered:'Questions answered',accuracy:'Accuracy',bank:'Questions in the bank',weakest:'Weakest topic',
       none:'Not enough data yet',
       practiceTitle:'Practice',practiceText:'Choose what to practise. You get the answer and an explanation after every question.',
@@ -151,10 +151,10 @@ var T = {
       weakTopics:'Topics to work on',practiseWeak:'Practise these topics',date:'Date',mode:'Exam',view:'View',
       resume:'You have an exam in progress.',resumeBtn:'Continue exam',discard:'Discard',
       loadErr:'Something went wrong. Please try again.',minLeft:'min left',invalidNote:'This attempt is marked as not valid for class statistics (too few answers or too fast).'},
-  ar:{home:'الرئيسية',practice:'تدريب',exam:'اختبار تجريبي',progress:'تقدّمي',lang:'English',
+  ar:{loginTitle:'تسجيل الدخول',loginSub:'ادخل برقمك الجامعي ورمز سري (PIN). تقدّمك ينحفظ على رقمك، فتقدر تكمل من أي جهاز.',uniId:'الرقم الجامعي',pin:'الرمز السري (٤–٨ أرقام)',signIn:'دخول',newHere:'ما فيه حساب بهذا الرقم. أكّد الرمز السري عشان ننشئ حسابك.',confirmPin:'تأكيد الرمز السري',createAcc:'إنشاء الحساب',pinMismatch:'الرمزين مو متطابقين.',signOut:'خروج',signedAs:'مسجّل باسم',BAD_ID:'اكتب رقمك الجامعي (أرقام بس).',BAD_PIN:'الرمز السري لازم يكون من ٤ إلى ٨ أرقام.',WRONG_PIN:'الرمز السري غلط. جرّب مرة ثانية.',LOCKED:'محاولات خاطئة كثيرة. انتظر ١٥ دقيقة وجرّب مرة ثانية.',forgotPin:'نسيت الرمز؟ اطلب من الدكتورة تعيد تعيينه.',back:'رجوع',home:'الرئيسية',practice:'تدريب',exam:'اختبار تجريبي',progress:'تقدّمي',lang:'English',
       welcome:'تدرّب على اختبار إدارة المشاريع',
       heroText:'تدرّب حسب الموضوع مع تصحيح فوري، ثم اختبر نفسك في اختبار تجريبي بوقت محدد مثل الاختبار الحقيقي، واعرف بالضبط وين تحتاج تتحسن.',
-      startPractice:'ابدأ التدريب',takeExam:'ابدأ اختبار تجريبي',nickname:'اسمك المستعار',nickHint:'يظهر لك أنت فقط. لا نحتاج اسمك أو رقمك الجامعي.',
+      startPractice:'ابدأ التدريب',takeExam:'ابدأ اختبار تجريبي',nickname:'اسمك المستعار',nickHint:'اختياري. يظهر للدكتورة جنب رقمك الجامعي.',
       save:'حفظ',answered:'أسئلة جاوبتها',accuracy:'نسبة الصح',bank:'عدد الأسئلة في البنك',weakest:'أضعف موضوع',
       none:'ما فيه بيانات كافية بعد',
       practiceTitle:'تدريب',practiceText:'اختر وش تبي تتدرب عليه. بعد كل سؤال يطلع لك الجواب الصحيح والشرح.',
@@ -181,9 +181,9 @@ var T = {
 var MODE_AR = {course:'الاختبار التجريبي للمادة',full:'اختبار كامل الطول',quick:'اختبار سريع'};
 var DIFF_AR = {Easy:'سهل',Medium:'متوسط',Hard:'صعب'};
 var DOM_AR = {1:'الأساسيات والمفاهيم',2:'المنهج التنبؤي',3:'أطر Agile'};
-
+ 
 /* ------------------------------------------------------------ state + storage */
-var S = { cfg:null, view:'home', lang:'en', sid:'', nick:'', practice:null, exam:null, result:null, progress:null };
+var S = { cfg:null, view:'home', lang:'en', sid:'', uid:'', nick:'', practice:null, exam:null, result:null, progress:null };
 function store(k,v){ try{ if(v===undefined) return JSON.parse(localStorage.getItem('pmprep_'+k)); if(v===null) localStorage.removeItem('pmprep_'+k); else localStorage.setItem('pmprep_'+k, JSON.stringify(v)); }catch(e){ return null; } }
 function t(k){ return (T[S.lang]||T.en)[k] || T.en[k] || k; }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
@@ -192,7 +192,7 @@ function modeLabel(k){ return S.lang==='ar' ? (MODE_AR[k]||k) : (S.cfg && S.cfg.
 function domName(d){ return S.lang==='ar' ? DOM_AR[d] : S.cfg.domains[d]; }
 function lecName(l, name){ return (S.lang==='ar'?'المحاضرة ':'L') + l + ' · ' + (name||''); }
 function newId(){ var a='abcdefghijklmnopqrstuvwxyz0123456789',s=''; var r=(window.crypto&&crypto.getRandomValues)?crypto.getRandomValues(new Uint8Array(24)):null; for(var i=0;i<24;i++) s+=a[(r?r[i]:Math.floor(Math.random()*256))%36]; return 's-'+s; }
-
+ 
 /* ------------------------------------------------------------ server calls */
 var API_URL='https://script.google.com/macros/s/AKfycby9n5U5gExg5Jd-n0nVj6GCcUKsU2e_ZqJl_b6kyS9OGbo04Zf2FUwx0iij5y-TcA-n/exec';
 function api(fn){
@@ -208,10 +208,12 @@ function api(fn){
     .then(function(j){ if(!j.ok) throw new Error(j.error||'Request failed'); return j.result; },
           function(e){ throw (e && /Server error|Request failed/.test(e.message)) ? e : new Error('Connection problem. Check your internet and try again.'); });
 }
+var api0=api;
+api=function(){ return api0.apply(null,arguments).catch(function(e){ if(e && /sign in again/i.test(e.message)){ signOut(true); } throw e; }); };
 function toast(msg){ var d=document.createElement('div'); d.className='toast'; d.setAttribute('role','status'); d.textContent=msg; document.body.appendChild(d); setTimeout(function(){d.remove();},3200); }
 function loading(msg){ app().innerHTML='<div class="center"><div><div class="spin"></div><div class="muted">'+esc(msg||'…')+'</div></div></div>'; }
 function app(){ return document.getElementById('app'); }
-
+ 
 /* ------------------------------------------------------------ shell */
 function setLang(l){
   S.lang=l; store('lang',l);
@@ -221,6 +223,7 @@ function setLang(l){
 function nav(){
   var items=[['home',t('home'),'M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z'],['practice',t('practice'),'M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z'],['exam',t('exam'),'M12 8v5l3 2M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z'],['progress',t('progress'),'M4 20V10M10 20V4M16 20v-7M22 20H2']];
   var h=items.map(function(it){ return '<button data-go="'+it[0]+'"'+(S.view===it[0]?' aria-current="page"':'')+'><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="'+it[2]+'"/></svg> <span class="lbl">'+esc(it[1])+'</span></button>'; }).join('');
+  if(S.view==='login') h='';
   h+='<button class="lang" id="langBtn">'+esc(t('lang'))+'</button>';
   var n=document.getElementById('nav'); n.innerHTML=h;
   n.querySelectorAll('[data-go]').forEach(function(b){ b.onclick=function(){ go(b.getAttribute('data-go')); }; });
@@ -234,6 +237,7 @@ function render(){
   nav();
   var tb=document.querySelector('.topbar'); if(tb) document.documentElement.style.setProperty('--hh', tb.offsetHeight+'px');
   var v=S.view;
+  if(!S.sid || v==='login'){ S.view='login'; nav(); return viewLogin(); }
   if(v==='home') return viewHome();
   if(v==='practice') return viewPracticeSetup();
   if(v==='practice-run') return viewPracticeRun();
@@ -243,7 +247,55 @@ function render(){
   if(v==='result') return viewResult();
   if(v==='progress') return viewProgress();
 }
-
+ 
+/* ------------------------------------------------------------ sign in */
+function signOut(expired){
+  ['token','uid','exam'].forEach(function(k){ store(k,null); });
+  S.sid=''; S.uid=''; S.exam=null; S.progress=null; S.practice=null; S.result=null;
+  S.view='login'; render(); if(expired) toast(t('loginTitle'));
+}
+function viewLogin(step){
+  var reg = step==='register';
+  var h='<div class="center"><div class="card white" style="max-width:420px;width:100%">'+
+    '<h1 style="margin-top:0">'+esc(t('loginTitle'))+'</h1><p class="muted">'+esc(reg?t('newHere'):t('loginSub'))+'</p>'+
+    '<label class="f" for="lgId">'+esc(t('uniId'))+'</label><input type="text" id="lgId" inputmode="numeric" autocomplete="username" maxlength="12" style="width:100%" value="'+esc(S.loginId||'')+'"'+(reg?' disabled':'')+'>'+
+    '<label class="f" for="lgPin" style="margin-top:10px">'+esc(t('pin'))+'</label><input type="password" id="lgPin" inputmode="numeric" autocomplete="'+(reg?'new-password':'current-password')+'" maxlength="8" style="width:100%" value="'+esc(reg?(S.loginPin||''):'')+'"'+(reg?' disabled':'')+'>'+
+    (reg?'<label class="f" for="lgPin2" style="margin-top:10px">'+esc(t('confirmPin'))+'</label><input type="password" id="lgPin2" inputmode="numeric" autocomplete="new-password" maxlength="8" style="width:100%">'+
+         '<label class="f" for="lgNick" style="margin-top:10px">'+esc(t('nickname'))+'</label><input type="text" id="lgNick" maxlength="30" style="width:100%" value="'+esc(S.nick||'')+'"><div class="muted" style="font-size:13px">'+esc(t('nickHint'))+'</div>':'')+
+    '<div class="err" id="lgErr" role="alert" style="color:#C62828;margin-top:10px;min-height:1em"></div>'+
+    '<div class="row" style="margin-top:6px"><button class="btn" id="lgBtn" style="flex:1">'+esc(reg?t('createAcc'):t('signIn'))+'</button>'+(reg?'<button class="btn ghost" id="lgBack">'+esc(t('back'))+'</button>':'')+'</div>'+
+    '<p class="muted" style="font-size:13px;margin-bottom:0">'+esc(t('forgotPin'))+'</p></div></div>';
+  app().innerHTML=h;
+  var first=document.getElementById(reg?'lgPin2':'lgId'); if(first) first.focus();
+  function err(code){ document.getElementById('lgErr').textContent = code ? (T[S.lang][code] || T.en[code] || code) : ''; }
+  function done(r){
+    S.sid=r.token; S.uid=r.studentId; store('token',r.token); store('uid',r.studentId);
+    if(r.nickname){ S.nick=r.nickname; store('nick',r.nickname); }
+    S.loginPin=''; S.view='home'; render();
+  }
+  function submit(){
+    var b=document.getElementById('lgBtn'); err('');
+    if(reg){
+      var p2=document.getElementById('lgPin2').value;
+      if(p2!==S.loginPin) return err('pinMismatch');
+      var nk=document.getElementById('lgNick').value.trim().slice(0,30);
+      b.disabled=true;
+      api0('studentLogin',S.loginId,S.loginPin,nk,true).then(done).catch(function(e){ b.disabled=false; err(e.message); });
+      return;
+    }
+    var id=document.getElementById('lgId').value.replace(/\s/g,''), pin=document.getElementById('lgPin').value;
+    if(!/^[1-9]\d{5,11}$/.test(id)) return err('BAD_ID');
+    if(!/^\d{4,8}$/.test(pin)) return err('BAD_PIN');
+    S.loginId=id; b.disabled=true;
+    api0('studentLogin',id,pin,'',false).then(function(r){
+      if(r.needsRegister){ S.loginPin=pin; viewLogin('register'); return; }
+      done(r);
+    }).catch(function(e){ b.disabled=false; err(e.message); });
+  }
+  document.getElementById('lgBtn').onclick=submit;
+  app().querySelectorAll('input').forEach(function(inp){ inp.onkeydown=function(e){ if(e.key==='Enter') submit(); }; });
+  var bk=document.getElementById('lgBack'); if(bk) bk.onclick=function(){ S.loginPin=''; viewLogin(); };
+}
 /* ------------------------------------------------------------ home */
 function viewHome(){
   var saved=store('exam');
@@ -251,10 +303,11 @@ function viewHome(){
   if(saved) h+='<div class="card white" style="margin-top:14px;border-color:var(--brand)"><div class="row"><b>'+esc(t('resume'))+'</b> <span class="muted">'+esc(modeLabel(saved.mode))+'</span><span class="spacer"></span><button class="btn small" id="resumeBtn">'+esc(t('resumeBtn'))+'</button></div></div>';
   h+='<div class="grid g3" style="margin-top:14px" id="homeStats"><div class="card"><div class="muted">'+esc(t('answered'))+'</div><div class="stat" id="hsA">…</div></div><div class="card"><div class="muted">'+esc(t('accuracy'))+'</div><div class="stat" id="hsB">…</div></div><div class="card"><div class="muted">'+esc(t('weakest'))+'</div><div style="font-weight:700;margin-top:6px" id="hsC">…</div></div></div>';
   h+='<div class="card" style="margin-top:14px"><label class="f" for="nick">'+esc(t('nickname'))+'</label><div class="row"><input type="text" id="nick" maxlength="30" style="max-width:300px" value="'+esc(S.nick)+'"><button class="btn small dark" id="saveNick">'+esc(t('save'))+'</button></div><div class="muted" style="font-size:13px;margin-top:6px">'+esc(t('nickHint'))+'</div></div>';
-  h+='<p class="muted" style="margin-top:14px;font-size:14px">'+esc(t('bank'))+': <b>'+S.cfg.bankSize+'</b></p>';
+  h+='<p class="muted" style="margin-top:14px;font-size:14px">'+esc(t('signedAs'))+' <b>'+esc(S.uid)+'</b> · <a href="#" id="soLink">'+esc(t('signOut'))+'</a> · '+esc(t('bank'))+': <b>'+S.cfg.bankSize+'</b></p>';
   app().innerHTML=h;
   bindGo();
   var rb=document.getElementById('resumeBtn'); if(rb) rb.onclick=function(){ S.exam=saved; go('exam-run'); };
+  document.getElementById('soLink').onclick=function(e){ e.preventDefault(); signOut(); };
   document.getElementById('saveNick').onclick=function(){ S.nick=document.getElementById('nick').value.trim().slice(0,30); store('nick',S.nick); toast('✓'); };
   api('getProgress',S.sid).then(function(p){
     S.progress=p;
@@ -264,7 +317,7 @@ function viewHome(){
   }).catch(function(){});
 }
 function bindGo(){ app().querySelectorAll('[data-go]').forEach(function(b){ b.onclick=function(){ go(b.getAttribute('data-go')); }; }); }
-
+ 
 /* ------------------------------------------------------------ practice */
 function viewPracticeSetup(){
   var c=S.cfg, last=store('pfilters')||{};
@@ -330,7 +383,7 @@ function flagDialog(qid){
   m.querySelector('#fC').onclick=function(){ m.remove(); };
   m.querySelector('#fS').onclick=function(){ var b=this; b.disabled=true; api('flagQuestion',S.sid,qid,m.querySelector('#fR').value,m.querySelector('#fN').value).then(function(){ m.remove(); toast(t('thanks')); }).catch(function(e){ b.disabled=false; toast(e.message); }); };
 }
-
+ 
 /* ------------------------------------------------------------ exams */
 function viewExamList(){
   var saved=store('exam');
@@ -434,7 +487,7 @@ function viewResult(){
   app().querySelectorAll('[data-f]').forEach(function(b){ b.onclick=function(){ S.reviewFilter=b.getAttribute('data-f'); viewResult(); }; });
   app().querySelectorAll('[data-flag]').forEach(function(b){ b.onclick=function(){ flagDialog(b.getAttribute('data-flag')); }; });
 }
-
+ 
 /* ------------------------------------------------------------ progress */
 function viewProgress(){
   loading();
@@ -450,10 +503,10 @@ function viewProgress(){
     app().querySelectorAll('[data-r]').forEach(function(b){ b.onclick=function(){ loading(); api('getAttemptResult',S.sid,b.getAttribute('data-r')).then(function(r){ S.result=r; S.reviewFilter='all'; go('result'); }).catch(function(e){ toast(e.message); go('progress'); }); }; });
   }).catch(function(e){ app().innerHTML='<p>'+esc(e.message||t('loadErr'))+'</p>'; });
 }
-
+ 
 /* ------------------------------------------------------------ boot */
 (function boot(){
-  S.sid=store('sid'); if(!S.sid){ S.sid=newId(); store('sid',S.sid); }
+  S.sid=store('token')||''; S.uid=store('uid')||''; store('sid',null);
   S.nick=store('nick')||''; S.lang=store('lang')||'en';
   document.body.setAttribute('dir',S.lang==='ar'?'rtl':'ltr');
   document.getElementById('brand').onclick=function(){ go('home'); };
@@ -469,3 +522,4 @@ function viewProgress(){
 </script>
 </body>
 </html>
+ 
