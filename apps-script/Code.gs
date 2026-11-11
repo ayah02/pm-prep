@@ -1,5 +1,5 @@
 /**
- * PM Prep – PMP-style practice and mock-exam system
+ * PM Prep – PMP practice and mock-exam system (PMI Examination Content Outline, July 2026)
  * Student project – CIS 386, Group G5, Al Yamamah University
  *
  * Runs as a Google Apps Script web app bound to the "PM Prep database" Google Sheet.
@@ -13,15 +13,16 @@ var CONFIG = {
   PASS_MARK: 0.70,         // readiness / pass line (report Table 7.1)
   DOMAIN_FLAG: 0.65,       // domain accuracy flag (report Table 7.1)
   MODES: {
-    course: { label: 'Course mock exam', total: 60, minutes: 75, blueprint: { 1: 30, 2: 14, 3: 16 }, useExamSet: true },
-    full:   { label: 'Full-length practice exam', total: 150, minutes: 180, blueprint: { 1: 74, 2: 35, 3: 41 } },
-    quick:  { label: 'Quick quiz', total: 20, minutes: 25, blueprint: { 1: 10, 2: 4, 3: 6 } }
+    // 1.33 minutes per item, as on the real PMP exam (240 minutes for 180 items)
+    course: { label: 'Course mock exam', total: 60, minutes: 80, blueprint: { 1: 20, 2: 25, 3: 15 }, useExamSet: true },
+    full:   { label: 'Full-length PMP simulation', total: 180, minutes: 240, blueprint: { 1: 59, 2: 74, 3: 47 } },
+    quick:  { label: 'Quick quiz', total: 20, minutes: 27, blueprint: { 1: 7, 2: 8, 3: 5 } }
   },
-  DOMAINS: { 1: 'Fundamentals & Core Concepts', 2: 'Predictive, Plan-Based', 3: 'Agile Frameworks' },
+  // PMP exam domains and their weight on the real exam (PMI Examination Content Outline, July 2026)
+  DOMAINS: { 1: 'People', 2: 'Process', 3: 'Business Environment' },
+  WEIGHTS: { 1: 0.33, 2: 0.41, 3: 0.26 },
+  APPROACHES: ['Predictive', 'Agile', 'Hybrid', 'Any'],   // delivery approach of each item ('Any' = approach-neutral)
   LEVELS: ['Easy', 'Medium', 'Hard'],  // difficulty levels used in the bank, practice filter, results and dashboard
-  // PMP exam domains, PMI Examination Content Outline (July 2026);
-  // every question is tagged with the PMP domain and task it trains (PMP_MAP_ below).
-  PMP: [{ key: 'People', weight: 0.33 }, { key: 'Process', weight: 0.41 }, { key: 'Business Environment', weight: 0.26 }],
   PMP_TASKS: {
     'I.1': 'Develop a common vision', 'I.2': 'Manage conflicts', 'I.3': 'Lead the project team', 'I.4': 'Engage stakeholders',
     'I.5': 'Align stakeholder expectations', 'I.6': 'Manage stakeholder expectations', 'I.7': 'Help ensure knowledge transfer', 'I.8': 'Plan and manage communication',
@@ -125,40 +126,6 @@ function withLock_(fn) {
 
 /* ------------------------------------------------------------------ question bank */
 
-var PMP_MAP_ = {   // PMP ECO (July 2026) task per question; the domain is the roman numeral (I People, II Process, III Business Environment)
-  'I.2': 'Q29 B062 B063 B064 P067 S012',
-  'I.3': 'Q02 Q27 B005 B010 B032 B034 B035 B036 B040 B060 B115 B130 B146 P022 P023 P024 P034 P057 P066 S002 S013 S014 S045 S055 S067',
-  'I.4': 'Q12 R01 B022 B052',
-  'I.5': 'Q08 Q13 Q54 B075 B123 P008 S004 S019',
-  'I.8': 'Q20 Q23 B047 B048 P015 S015 S022',
-  'II.1': 'Q01 Q03 Q18 Q32 Q45 Q48 Q58 B003 B011 B012 B016 B018 B029 B058 B059 B065 B067 B073 B088 B113 B127 B137 B140 B141 B142 B143 B147 B148 B158 P007 S001 S024 S029 S044 S047 S048 S054 S064',
-  'II.2': 'Q10 Q31 Q35 Q36 Q46 Q49 Q50 Q51 Q52 Q59 B008 B024 B068 B069 B083 B107 B108 B117 B118 B119 B120 B122 B124 B125 B126 B128 B129 B145 B149 B150 B155 B157 P009 P010 P042 P047 P056 P059 P061 P062 P068 S010 S028 S050 S051 S053 S057 S060 S068 S071 S072',
-  'II.3': 'Q05 Q47 B001 B049 B050 B099 B105 B116 B135 B136 B139 B151 B152 B153 B156 P003 P029 P030 P058 S020 S042 S046 S069',
-  'II.4': 'Q07 Q15 Q17 R02 B019 B025 B037 B070 P011 P035 P044 S009',
-  'II.5': 'B004 B031 B057 B112 P018 P019 P032 P039 P040 P049 P055 S003 S008 S017 S030',
-  'II.6': 'Q41 Q42 Q43 Q44 R03 B015 B076 B093 B094 B095 B096 B097 B098 B100 B101 B106 B133 P036 P050 P051 P052 P053 P054 S038 S039 S040 S041 S070',
-  'II.7': 'B013 B026 B056 B084 B085 B131 B138 B154 P031 P033 P041 P048 S021 S036 S037 S056 S061',
-  'II.8': 'Q09 Q33 Q34 Q37 Q38 Q39 Q40 R04 B017 B077 B078 B079 B080 B081 B082 B086 B087 B089 B090 P043 P045 P046 P069 S031 S032 S033 S034 S035',
-  'II.9': 'Q25 Q53 Q56 Q57 Q60 R06 B033 B071 B092 B103 B114 B121 B132 P063 P065 P070 S043 S052 S058 S059 S062 S063 S066',
-  'II.10': 'B023 B144 P004 P005 P016',
-  'III.1': 'Q16 Q19 B002 B030 B038 B039 B111 P020 S011 S023',
-  'III.2': 'B006 B007 B027 B072 B110 P001 P028 P038 S026',
-  'III.3': 'Q04 Q22 Q24 B051 B053 P017 P025 P026 P027 S027',
-  'III.4': 'Q26 Q30 R05 B066 P021',
-  'III.5': 'Q06 Q11 Q21 B014 B020 B021 B028 B041 B042 B043 B044 B045 B046 B054 B074 B091 B102 B104 P002 P012 P013 P014 P037 P060 S005 S006 S007 S016 S018 S073',
-  'III.6': 'Q28 Q55 B055 B061 B109 B134 P006 P064 S025 S065',
-  'III.7': 'Q14 S049',
-  'III.8': 'B009'
-};
-
-var PMP_BY_ID_ = null;
-function pmpTaskOf_(id) {
-  if (!PMP_BY_ID_) {
-    PMP_BY_ID_ = {};
-    Object.keys(PMP_MAP_).forEach(function (t) { PMP_MAP_[t].split(' ').forEach(function (q) { PMP_BY_ID_[q] = t; }); });
-  }
-  return PMP_BY_ID_[id] || 'II.1';
-}
 function pmpDomainOf_(task) { return { I: 'People', II: 'Process', III: 'Business Environment' }[String(task).split('.')[0]] || 'Process'; }
 
 
@@ -175,8 +142,8 @@ function questions_() {
     var key = String(r[I.Correct_Option] || '').trim().toUpperCase();
     if ('ABCD'.indexOf(key) < 0 || key.length !== 1) return;
     var eco = String(r[I.ECO_Task] || '');
-    // a PMP_Task column in the sheet (e.g. 'III.5') overrides the built-in map
-    var pmpTask = (I.PMP_Task !== undefined && String(r[I.PMP_Task] || '').trim()) || pmpTaskOf_(id);
+    // PMP task code, e.g. 'III.5' (from the PMP_Task column, else the start of ECO_Task)
+    var pmpTask = (I.PMP_Task !== undefined && String(r[I.PMP_Task] || '').trim()) || eco.split(' ')[0];
     list.push({
       id: id,
       status: String(r[I.Status] || 'Bank'),
@@ -186,6 +153,8 @@ function questions_() {
       topic: String(r[I.Lecture_Topic] || ''),
       difficulty: String(r[I.Difficulty] || ''),
       pmpTask: pmpTask, pmp: pmpDomainOf_(pmpTask),
+      approach: I.Approach !== undefined ? String(r[I.Approach] || 'Any') : 'Any',
+      itemType: I.Item_Type !== undefined ? String(r[I.Item_Type] || '') : '',
       text: String(r[I.Question] || ''),
       options: [r[I.Option_A], r[I.Option_B], r[I.Option_C], r[I.Option_D]].map(String),
       key: key,
@@ -204,22 +173,13 @@ function byId_() {
 }
 
 function publicQ_(q) {   // what the browser may see before answering
-  return { id: q.id, domain: q.domain, lecture: q.lecture, topic: q.topic, difficulty: q.difficulty, pmp: q.pmp, pmpTask: q.pmpTask,
-           text: q.text, options: q.options, taught: q.taught };
+  return { id: q.id, domain: q.domain, lecture: q.lecture, topic: q.topic, difficulty: q.difficulty, pmpTask: q.pmpTask,
+           approach: q.approach, itemType: q.itemType, text: q.text, options: q.options };
 }
 
-function lectureNames_() {
-  var counts = {};
-  questions_().forEach(function (q) {
-    var name = q.eco.replace(/^\s*\d+\.\d+\s*/, '');
-    counts[q.lecture] = counts[q.lecture] || {};
-    counts[q.lecture][name] = (counts[q.lecture][name] || 0) + 1;
-  });
+function lectureNames_() {   // 'lecture' = PMP task number (1–26); its name is the task, e.g. 'I.2 Manage conflicts'
   var out = {};
-  Object.keys(counts).forEach(function (l) {
-    var best = Object.keys(counts[l]).sort(function (a, b) { return counts[l][b] - counts[l][a]; })[0];
-    out[l] = best;
-  });
+  questions_().forEach(function (q) { if (!out[q.lecture]) out[q.lecture] = q.topic; });
   return out;
 }
 
@@ -232,10 +192,10 @@ function getConfig() {
     lectures[q.lecture].count++;
   });
   // what the bank holds: domain x level counts, and the level mix of the fixed course exam set
-  var bank = {}, examLv = {}, bankPmp = {}, examPmp = {};
+  var bank = {}, examLv = {}, bankAp = {}, examAp = {};
   qs.forEach(function (q) {
-    bankPmp[q.pmp] = (bankPmp[q.pmp] || 0) + 1;
-    if (q.status === 'Exam') examPmp[q.pmp] = (examPmp[q.pmp] || 0) + 1;
+    bankAp[q.approach] = (bankAp[q.approach] || 0) + 1;
+    if (q.status === 'Exam') examAp[q.approach] = (examAp[q.approach] || 0) + 1;
     bank[q.domain] = bank[q.domain] || {}; bank[q.domain][q.difficulty] = (bank[q.domain][q.difficulty] || 0) + 1;
     if (q.status === 'Exam') examLv[q.difficulty] = (examLv[q.difficulty] || 0) + 1;
   });
@@ -243,7 +203,7 @@ function getConfig() {
   Object.keys(CONFIG.MODES).forEach(function (k) {
     var m = CONFIG.MODES[k];
     modes[k] = { label: m.label, total: m.total, minutes: m.minutes, blueprint: m.blueprint,
-                 levelMix: m.useExamSet ? examLv : null, pmpMix: m.useExamSet ? examPmp : null };
+                 levelMix: m.useExamSet ? examLv : null, approachMix: m.useExamSet ? examAp : null };
   });
   return {
     appName: CONFIG.APP_NAME, footer: CONFIG.FOOTER, logoUrl: CONFIG.LOGO_URL,
@@ -251,7 +211,8 @@ function getConfig() {
     lectures: Object.keys(lectures).map(function (k) { return lectures[k]; }).sort(function (a, b) { return a.lecture - b.lecture; }),
     bankSize: qs.length,
     levels: CONFIG.LEVELS,
-    pmp: CONFIG.PMP.map(function (p) { return { pmp: p.key, weight: p.weight, bank: bankPmp[p.key] || 0 }; }),
+    weights: CONFIG.WEIGHTS,
+    approaches: CONFIG.APPROACHES.map(function (a) { return { approach: a, bank: bankAp[a] || 0 }; }),
     bankMatrix: [1, 2, 3].map(function (d) { return { domain: d, counts: CONFIG.LEVELS.map(function (l) { return (bank[d] && bank[d][l]) || 0; }) }; })
   };
 }
@@ -266,8 +227,8 @@ function getPracticeSet(studentId, filters) {
     if (filters.domain && q.domain !== Number(filters.domain)) return false;
     if (filters.lecture && q.lecture !== Number(filters.lecture)) return false;
     if (filters.difficulty && q.difficulty !== filters.difficulty) return false;
-    if (filters.pmp && q.pmp !== filters.pmp) return false;
-    if (filters.taughtOnly && q.taught !== 'Yes') return false;
+    if (filters.approach && q.approach !== filters.approach) return false;
+    if (filters.scenarioOnly && q.itemType && q.itemType !== 'Scenario' && q.itemType !== 'Calculation') return false;
     return true;
   });
   if (filters.weak) {
@@ -381,9 +342,9 @@ function levelList_(lvl) {
     .map(function (l) { return { level: l, correct: lvl[l].c, total: lvl[l].n }; });
 }
 function addTo_(m, k, ok) { m[k] = m[k] || { c: 0, n: 0 }; m[k].n++; if (ok) m[k].c++; }
-function pmpList_(pm) {
-  return CONFIG.PMP.filter(function (p) { return pm[p.key] && pm[p.key].n; })
-    .map(function (p) { return { pmp: p.key, weight: p.weight, correct: pm[p.key].c, total: pm[p.key].n }; });
+function approachList_(ap) {
+  return CONFIG.APPROACHES.filter(function (a) { return ap[a] && ap[a].n; })
+    .map(function (a) { return { approach: a, correct: ap[a].c, total: ap[a].n }; });
 }
 
 function resultFor_(responseId) {
@@ -398,8 +359,8 @@ function resultFor_(responseId) {
     if (!q) return;
     var sel = String(r[A.idx.SelectedOption] || ''), ok = Number(r[A.idx.IsCorrect]) === 1;
     review.push({ id: q.id, text: q.text, options: q.options, key: q.key, selected: sel, correct: ok,
-                  explanation: q.explanation, domain: q.domain, lecture: q.lecture, difficulty: q.difficulty, pmp: q.pmp, pmpTask: q.pmpTask });
-    addTo_(lvl, q.difficulty, ok); addTo_(pm, q.pmp, ok);
+                  explanation: q.explanation, domain: q.domain, lecture: q.lecture, difficulty: q.difficulty, pmpTask: q.pmpTask, approach: q.approach });
+    addTo_(lvl, q.difficulty, ok); addTo_(pm, q.approach, ok);
     dom[q.domain] = dom[q.domain] || { c: 0, n: 0 };
     lec[q.lecture] = lec[q.lecture] || { c: 0, n: 0 };
     dom[q.domain].n++; lec[q.lecture].n++;
@@ -413,7 +374,7 @@ function resultFor_(responseId) {
     valid: resp[I.IsValid] === true || String(resp[I.IsValid]).toUpperCase() === 'TRUE',
     byDomain: Object.keys(dom).map(function (d) { return { domain: Number(d), name: CONFIG.DOMAINS[d], correct: dom[d].c, total: dom[d].n }; }),
     byLevel: levelList_(lvl),
-    byPmp: pmpList_(pm),
+    byApproach: approachList_(pm),
     byLecture: Object.keys(lec).map(function (l) { return { lecture: Number(l), name: names[l], correct: lec[l].c, total: lec[l].n }; })
                  .sort(function (a, b) { return a.correct / a.total - b.correct / b.total; }),
     review: review
@@ -459,7 +420,7 @@ function getProgress(studentId) {
   studentId = who_(studentId);
   var names = lectureNames_(), answers = studentAnswers_(studentId), s = lectureStats_(studentId, answers), lvl = {};
   var pm = {};
-  answers.forEach(function (x) { addTo_(lvl, x.q.difficulty, x.ok); addTo_(pm, x.q.pmp, x.ok); });
+  answers.forEach(function (x) { addTo_(lvl, x.q.difficulty, x.ok); addTo_(pm, x.q.approach, x.ok); });
   var R = table_(SHEETS.R), I = R.idx, attempts = [];
   R.rows.forEach(function (r) {
     if (String(r[I.StudentID]) !== studentId) return;
@@ -479,7 +440,7 @@ function getProgress(studentId) {
     attempts: attempts.reverse(),
     byDomain: Object.keys(dom).map(function (d) { return { domain: Number(d), name: CONFIG.DOMAINS[d], correct: dom[d].c, total: dom[d].n }; }),
     byLevel: levelList_(lvl),
-    byPmp: pmpList_(pm),
+    byApproach: approachList_(pm),
     byLecture: Object.keys(s).map(function (k) { return { lecture: s[k].lecture, name: names[s[k].lecture], correct: s[k].c, total: s[k].n }; })
                  .sort(function (a, b) { return a.lecture - b.lecture; }),
     weak: weakLectures_(studentId, answers).map(function (w) { return { lecture: w.lecture, name: names[w.lecture], correct: w.c, total: w.n }; })
@@ -641,18 +602,18 @@ function adminStats(token, filters) {
     durations.push(Number(r[I.DurationMin]));
   });
 
-  var A = table_(SHEETS.A), dom = {}, lec = {}, qs = {}, lvl = {}, dl = {}, pm = {}, pt = {};
+  var A = table_(SHEETS.A), dom = {}, lec = {}, qs = {}, lvl = {}, dl = {}, pm = {};
   A.rows.forEach(function (r) {
     if (!keep[String(r[A.idx.ResponseID])]) return;
     var q = map[String(r[A.idx.QuestionID])]; if (!q) return;
     var sel = String(r[A.idx.SelectedOption] || ''), ok = Number(r[A.idx.IsCorrect]) === 1;
-    var x = qs[q.id] = qs[q.id] || { id: q.id, text: q.text, domain: q.domain, lecture: q.lecture, difficulty: q.difficulty, pmp: q.pmp, pmpTask: q.pmpTask, key: q.key, seen: 0, attempts: 0, correct: 0, picks: { A: 0, B: 0, C: 0, D: 0 } };
+    var x = qs[q.id] = qs[q.id] || { id: q.id, text: q.text, domain: q.domain, lecture: q.lecture, difficulty: q.difficulty, approach: q.approach, pmpTask: q.pmpTask, key: q.key, seen: 0, attempts: 0, correct: 0, picks: { A: 0, B: 0, C: 0, D: 0 } };
     x.seen++;
     if (!sel) return;                       // blanks: wrong in the score, left out of accuracy (Table H.2)
     x.attempts++; x.picks[sel]++; if (ok) x.correct++;
     dom[q.domain] = dom[q.domain] || { c: 0, n: 0 }; dom[q.domain].n++; if (ok) dom[q.domain].c++;
     lec[q.lecture] = lec[q.lecture] || { c: 0, n: 0 }; lec[q.lecture].n++; if (ok) lec[q.lecture].c++;
-    addTo_(lvl, q.difficulty, ok); addTo_(pm, q.pmp, ok); addTo_(pt, q.pmpTask, ok);
+    addTo_(lvl, q.difficulty, ok); addTo_(pm, q.approach, ok);
     dl[q.domain] = dl[q.domain] || {}; addTo_(dl[q.domain], q.difficulty, ok);
   });
 
@@ -665,7 +626,7 @@ function adminStats(token, filters) {
       .sort(function (a, b) { return x.picks[b] - x.picks[a]; })[0];
     var p = x.attempts ? x.correct / x.attempts : null;
     var share = x.attempts ? x.picks[wrong] / x.attempts : 0;
-    return { id: x.id, text: x.text, domain: x.domain, lecture: x.lecture, difficulty: x.difficulty, pmp: x.pmp, pmpTask: x.pmpTask, key: x.key, attempts: x.attempts,
+    return { id: x.id, text: x.text, domain: x.domain, lecture: x.lecture, difficulty: x.difficulty, approach: x.approach, pmpTask: x.pmpTask, key: x.key, attempts: x.attempts,
              p: p, topDistractor: x.picks[wrong] ? wrong : '', distractorShare: share,
              flagP: p !== null && (p < 0.30 || p > 0.90), flagDistractor: share > 0.40 };
   }).sort(function (a, b) { return (a.p === null ? 2 : a.p) - (b.p === null ? 2 : b.p); });
@@ -691,9 +652,8 @@ function adminStats(token, filters) {
     medianMinutes: median_(durations),
     passMark: CONFIG.PASS_MARK, domainFlag: CONFIG.DOMAIN_FLAG,
     byDomain: [1, 2, 3].map(function (d) { var x = dom[d]; return { domain: d, name: CONFIG.DOMAINS[d], accuracy: x ? x.c / x.n : null, attempts: x ? x.n : 0 }; }),
-    byPmp: CONFIG.PMP.map(function (p) { var x = pm[p.key]; return { pmp: p.key, weight: p.weight, accuracy: x ? x.c / x.n : null, attempts: x ? x.n : 0 }; }),
-    pmpTasks: Object.keys(pt).map(function (t) { return { task: t, name: CONFIG.PMP_TASKS[t] || t, pmp: pmpDomainOf_(t), accuracy: pt[t].c / pt[t].n, attempts: pt[t].n }; })
-                .sort(function (a, b) { return a.accuracy - b.accuracy; }),
+    weights: CONFIG.WEIGHTS,
+    byApproach: CONFIG.APPROACHES.map(function (a) { var x = pm[a]; return { approach: a, accuracy: x ? x.c / x.n : null, attempts: x ? x.n : 0 }; }),
     levels: CONFIG.LEVELS,
     byLevel: CONFIG.LEVELS.map(function (l) { var x = lvl[l]; return { level: l, accuracy: x ? x.c / x.n : null, attempts: x ? x.n : 0 }; }),
     domainLevel: [1, 2, 3].map(function (d) {
