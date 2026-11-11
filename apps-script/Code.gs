@@ -54,7 +54,7 @@ var API_ = {
   getConfig: getConfig, getPracticeSet: getPracticeSet, checkPractice: checkPractice,
   startExam: startExam, submitExam: submitExam, getProgress: getProgress,
   getAttemptResult: getAttemptResult, flagQuestion: flagQuestion,
-  adminLogin: adminLogin, adminStats: adminStats, adminExport: adminExport,
+  adminLogin: adminLogin, adminStats: adminStats, adminExport: adminExport, adminAddQuestions: adminAddQuestions,
   studentLogin: studentLogin
 };
 
@@ -679,3 +679,92 @@ function adminExport(token, which) {
   if (name === SHEETS.U) values = values.map(function (r) { return [r[0], r[1], r[4], r[5]]; });   // never export PIN hashes
   return values.map(function (r) { return r.map(function (v) { return v instanceof Date ? iso_(v) : v; }); });
 }
+
+/* ------------------------------------------------------------------ admin: add questions from the Excel template */
+
+var ITEM_TYPES_ = ['Scenario', 'Calculation', 'Knowledge'];
+
+function taskNumber_(code) {             // I.1 -> 1 ... I.8 -> 8, II.1 -> 9 ... II.10 -> 18, III.1 -> 19 ... III.8 -> 26
+  var p = String(code).split('.');
+  return { I: 0, II: 8, III: 18 }[p[0]] + Number(p[1]);
+}
+
+function pick_(list, v, def) {           // case-insensitive match against a list of allowed values
+  v = String(v == null ? '' : v).trim();
+  if (!v) return def;
+  for (var i = 0; i < list.length; i++) if (list[i].toLowerCase() === v.toLowerCase()) return list[i];
+  return null;
+}
+
+function safeCell_(v) {                  // stop text from being read as a formula
+  v = String(v == null ? '' : v);
+  return /^[=+\-@]/.test(v) ? "'" + v : v;
+}
+
+/**
+ * rows: objects with the template columns (QuestionID, Status, PMP_Task, Approach, Item_Type, Difficulty,
+ * Question, Option_A..Option_D, Correct_Option, Explanation, Source). Valid rows are appended to the Questions
+ * sheet; invalid rows are returned with the reason. dryRun = check only, add nothing.
+ * The fixed Exam set is never changed from here.
+ */
+function adminAddQuestions(token, rows, dryRun) {
+  checkAdmin_(token);
+  if (!Array.isArray(rows) || !rows.length) throw new Error('The file has no question rows.');
+  if (rows.length > 300) throw new Error('Upload at most 300 questions at a time.');
+  return withLock_(function () {
+    var sh = sheet_(SHEETS.Q), T = table_(SHEETS.Q), head = T.head.map(function (h) { return String(h).trim(); });
+    var existing = {}, maxA = 0;
+    T.rows.forEach(function (r) {
+      var id = String(r[T.idx.QuestionID] || '').trim();
+      if (!id) return;
+      existing[id.toUpperCase()] = true;
+      var m = /^A(\d+)$/i.exec(id); if (m) maxA = Math.max(maxA, Number(m[1]));
+    });
+    var out = [], added = [], errors = [], stamp = String(iso_(new Date())).slice(0, 10);
+    rows.forEach(function (x, i) {
+      var line = Number(x._row) || (i + 2), why = [];
+      function g(k) { return cleanText_(x[k], 1500); }
+      var code = g('PMP_Task').split(' ')[0].toUpperCase().replace(/^(I{1,3})\./, '$1.');
+      if (!CONFIG.PMP_TASKS[code]) why.push('PMP_Task must be a task code such as I.2, II.6 or III.5');
+      var status = pick_(['Bank', 'Reserve'], g('Status'), 'Bank');
+      if (!status) why.push(String(g('Status')).toLowerCase() === 'exam'
+        ? 'Status Exam is not allowed here (the 60-question exam set keeps its 20/25/15 blueprint); use Bank or Reserve'
+        : 'Status must be Bank or Reserve');
+      var approach = pick_(CONFIG.APPROACHES, g('Approach'), 'Any'); if (!approach) why.push('Approach must be Predictive, Agile, Hybrid or Any');
+      var type = pick_(ITEM_TYPES_, g('Item_Type'), 'Scenario'); if (!type) why.push('Item_Type must be Scenario, Calculation or Knowledge');
+      var level = pick_(CONFIG.LEVELS, g('Difficulty'), null); if (!level) why.push('Difficulty must be Easy, Medium or Hard');
+      var text = g('Question'); if (text.length < 10) why.push('Question text is missing or too short');
+      var opts = ['Option_A', 'Option_B', 'Option_C', 'Option_D'].map(function (k) { return cleanText_(x[k], 400); });
+      if (opts.some(function (o) { return !o; })) why.push('All four options (A–D) are needed');
+      else {
+        var seen = {}; opts.forEach(function (o) { seen[o.toLowerCase()] = true; });
+        if (Object.keys(seen).length < 4) why.push('The four options must be different');
+      }
+      var key = g('Correct_Option').toUpperCase(); if (!/^[ABCD]$/.test(key)) why.push('Correct_Option must be A, B, C or D');
+      var id = g('QuestionID').toUpperCase();
+      if (id) {
+        if (!/^[A-Z0-9_-]{1,20}$/.test(id)) why.push('QuestionID may use only letters, digits, - and _');
+        else if (existing[id]) why.push('QuestionID ' + id + ' already exists');
+      }
+      if (why.length) { errors.push({ row: line, reasons: why }); return; }
+      if (!id) { do { maxA++; id = 'A' + ('00' + maxA).slice(-3); } while (existing[id]); }
+      existing[id] = true;
+      var d = { I: 1, II: 2, III: 3 }[code.split('.')[0]], task = code + ' ' + CONFIG.PMP_TASKS[code];
+      var val = {
+        QuestionID: id, Active: true, Status: status, Domain: d, Domain_Name: CONFIG.DOMAINS[d], ECO_Task: task,
+        Lecture: taskNumber_(code), Lecture_Topic: task, Difficulty: level, Question: text,
+        Option_A: opts[0], Option_B: opts[1], Option_C: opts[2], Option_D: opts[3], Correct_Option: key,
+        Explanation: g('Explanation'), Source: g('Source') || ('Added by instructor ' + stamp), In_Lectures: '',
+        Approach: approach, Item_Type: type, PMP_Domain: CONFIG.DOMAINS[d], PMP_Task: code
+      };
+      out.push(head.map(function (h) { var v = val.hasOwnProperty(h) ? val[h] : ''; return typeof v === 'string' ? safeCell_(v) : v; }));
+      added.push(id);
+    });
+    if (out.length && !dryRun) { sh.getRange(sh.getLastRow() + 1, 1, out.length, head.length).setValues(out); QCACHE_ = null; }
+    var iq = head.indexOf('Question'), it = head.indexOf('PMP_Task'), il = head.indexOf('Difficulty'), ik = head.indexOf('Correct_Option');
+    return { dryRun: !!dryRun, added: dryRun ? 0 : added.length, ready: added.length, ids: added, errors: errors,
+             preview: out.slice(0, 8).map(function (r, i) { return { id: added[i], task: it >= 0 ? r[it] : '', level: il >= 0 ? r[il] : '', key: ik >= 0 ? r[ik] : '', text: iq >= 0 ? String(r[iq]).slice(0, 140) : '' }; }),
+             bankSize: T.rows.length + (dryRun ? 0 : out.length) };
+  });
+}
+
