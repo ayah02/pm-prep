@@ -126,14 +126,14 @@
 /* ------------------------------------------------------------ text (English / Arabic) */
 var T = {
   en:{loginTitle:'Sign in',loginSub:'Use your university ID and a PIN. Your progress is saved to your ID, so you can continue from any device.',uniId:'University ID',pin:'PIN (4–8 digits)',signIn:'Sign in',newHere:'No account yet for this ID. Confirm your PIN to create it.',confirmPin:'Confirm PIN',createAcc:'Create account',pinMismatch:'The two PINs do not match.',signOut:'Sign out',signedAs:'Signed in as',BAD_ID:'Enter your university ID (numbers only).',BAD_PIN:'The PIN must be 4–8 digits.',WRONG_PIN:'Wrong PIN. Try again.',LOCKED:'Too many wrong attempts. Wait 15 minutes and try again.',forgotPin:'Forgot your PIN? Ask your instructor to reset it.',back:'Back',home:'Home',practice:'Practice',exam:'Mock exam',progress:'My progress',lang:'العربية',
-      welcome:'Train for your project management exam',
-      heroText:'Practise by topic with instant feedback, then sit a timed mock exam built like the real thing and see exactly where to improve.',
+      welcome:'Train for the PMP® exam',
+      heroText:'Practise by PMP domain and task with instant feedback, then sit a timed mock exam built on PMI’s exam outline (July 2026) and see exactly where to improve.',
       startPractice:'Start practising',takeExam:'Take a mock exam',nickname:'Your nickname',nickHint:'Optional. Shown to your instructor next to your ID.',
-      save:'Save',answered:'Questions answered',accuracy:'Accuracy',bank:'Questions in the bank',weakest:'Weakest topic',
+      save:'Save',answered:'Questions answered',accuracy:'Accuracy',bank:'Questions in the bank',weakest:'Weakest task',
       none:'Not enough data yet',
       practiceTitle:'Practice',practiceText:'Choose what to practise. You get the answer and an explanation after every question.',
-      domain:'Domain',lecture:'Lecture / topic',difficulty:'Difficulty',any:'Any',count:'Number of questions',taught:'Only topics taught in the lectures',
-      weakOnly:'Focus on my weak topics',begin:'Begin',check:'Check answer',next:'Next question',finish:'Finish',
+      domain:'PMP domain',lecture:'PMP task',difficulty:'Difficulty',any:'Any',count:'Number of questions',taught:'Exam-style questions only (scenarios and calculations)',
+      weakOnly:'Focus on my weak tasks',begin:'Begin',check:'Check answer',next:'Next question',finish:'Finish',
       correct:'Correct!',incorrect:'Not quite.',theAnswer:'The correct answer is',explanation:'Why',
       flag:'Report a problem',flagTitle:'Report a problem with this question',reason:'Reason',note:'Details (optional)',send:'Send',cancel:'Cancel',thanks:'Thank you, the team will review it.',
       summary:'Practice summary',again:'Practise again',
@@ -145,20 +145,20 @@ var T = {
       confirmSubmit:'Submit your exam?',unanswered:'unanswered questions',submitNow:'Submit now',keepGoing:'Keep working',
       timeUp:'Time is up – your exam was submitted.',submitting:'Submitting…',
       resultTitle:'Your result',passed:'Ready – above the 70% line',notPassed:'Not yet – the target is 70%',
-      score:'Score',time:'Time',byDomain:'By course domain',byPmp:'By PMP domain',byLevel:'By level',pmpTitle:'PMP exam domains (PMI outline, July 2026)',pmpSub:'Every question is also tagged with the PMP domain it trains. Weight = share of the real PMP exam. Tap a domain to practise it.',weight:'PMP weight',inBank:'In the bank',share:'Share of bank',pmpFilter:'PMP domain',pmpMix:'PMP domains',byLecture:'By topic (weakest first)',review:'Review your answers',bankTitle:'What the question bank covers',bankSub:'3 course domains × 3 difficulty levels. Tap a number to practise that domain at that level.',total:'Total',levelMix:'Levels',levelRandom:'Levels: mixed at random',
+      score:'Score',time:'Time',byDomain:'By PMP domain',byApproach:'By approach',byLevel:'By level',apTitle:'Delivery approach',apSub:'PMI: about 40% predictive and 60% agile or hybrid. Any = approach-neutral. Tap an approach to practise it.',weight:'Exam weight',inBank:'In the bank',share:'Share of bank',approach:'Approach',apMix:'Approaches',byLecture:'By task (weakest first)',review:'Review your answers',bankTitle:'What the question bank covers',bankSub:'3 PMP domains × 3 difficulty levels (PMI exam outline, July 2026). Tap a number to practise that domain at that level.',total:'Total',levelMix:'Levels',levelRandom:'Levels: mixed at random',
       all:'All',wrongOnly:'Incorrect',skipped:'Unanswered',yourAnswer:'Your answer',notAnswered:'Not answered',
-      progressTitle:'My progress',byTopic:'By topic',attempts:'Mock exam history',noAttempts:'No mock exams yet.',
-      weakTopics:'Topics to work on',practiseWeak:'Practise these topics',date:'Date',mode:'Exam',view:'View',
+      progressTitle:'My progress',byTopic:'By task',attempts:'Mock exam history',noAttempts:'No mock exams yet.',
+      weakTopics:'Tasks to work on',practiseWeak:'Practise these tasks',date:'Date',mode:'Exam',view:'View',
       resume:'You have an exam in progress.',resumeBtn:'Continue exam',discard:'Discard',
       loadErr:'Something went wrong. Please try again.',minLeft:'min left',invalidNote:'This attempt is marked as not valid for class statistics (too few answers or too fast).'},
   ar:{loginTitle:'تسجيل الدخول',loginSub:'ادخل برقمك الجامعي ورمز سري (PIN). تقدّمك ينحفظ على رقمك، فتقدر تكمل من أي جهاز.',uniId:'الرقم الجامعي',pin:'الرمز السري (٤–٨ أرقام)',signIn:'دخول',newHere:'ما فيه حساب بهذا الرقم. أكّد الرمز السري عشان ننشئ حسابك.',confirmPin:'تأكيد الرمز السري',createAcc:'إنشاء الحساب',pinMismatch:'الرمزين مو متطابقين.',signOut:'خروج',signedAs:'مسجّل باسم',BAD_ID:'اكتب رقمك الجامعي (أرقام بس).',BAD_PIN:'الرمز السري لازم يكون من ٤ إلى ٨ أرقام.',WRONG_PIN:'الرمز السري غلط. جرّب مرة ثانية.',LOCKED:'محاولات خاطئة كثيرة. انتظر ١٥ دقيقة وجرّب مرة ثانية.',forgotPin:'نسيت الرمز؟ اطلب من الدكتورة تعيد تعيينه.',back:'رجوع',home:'الرئيسية',practice:'تدريب',exam:'اختبار تجريبي',progress:'تقدّمي',lang:'English',
-      welcome:'تدرّب على اختبار إدارة المشاريع',
-      heroText:'تدرّب حسب الموضوع مع تصحيح فوري، ثم اختبر نفسك في اختبار تجريبي بوقت محدد مثل الاختبار الحقيقي، واعرف بالضبط وين تحتاج تتحسن.',
+      welcome:'تدرّب على اختبار PMP®',
+      heroText:'تدرّب حسب دومينات ومهام PMP مع تصحيح فوري، ثم اختبر نفسك في اختبار تجريبي بوقت محدد مبني على مخطط PMI (يوليو 2026)، واعرف بالضبط وين تحتاج تتحسن.',
       startPractice:'ابدأ التدريب',takeExam:'ابدأ اختبار تجريبي',nickname:'اسمك المستعار',nickHint:'اختياري. يظهر للدكتورة جنب رقمك الجامعي.',
-      save:'حفظ',answered:'أسئلة جاوبتها',accuracy:'نسبة الصح',bank:'عدد الأسئلة في البنك',weakest:'أضعف موضوع',
+      save:'حفظ',answered:'أسئلة جاوبتها',accuracy:'نسبة الصح',bank:'عدد الأسئلة في البنك',weakest:'أضعف مهمة',
       none:'ما فيه بيانات كافية بعد',
       practiceTitle:'تدريب',practiceText:'اختر وش تبي تتدرب عليه. بعد كل سؤال يطلع لك الجواب الصحيح والشرح.',
-      domain:'الدومين',lecture:'المحاضرة / الموضوع',difficulty:'الصعوبة',any:'الكل',count:'عدد الأسئلة',taught:'مواضيع المحاضرات فقط',
+      domain:'دومين PMP',lecture:'مهمة PMP',difficulty:'الصعوبة',any:'الكل',count:'عدد الأسئلة',taught:'أسئلة بأسلوب الاختبار فقط (سيناريوهات وحسابات)',
       weakOnly:'ركّز على نقاط ضعفي',begin:'ابدأ',check:'تحقق من الإجابة',next:'السؤال التالي',finish:'إنهاء',
       correct:'إجابة صحيحة!',incorrect:'إجابة غير صحيحة.',theAnswer:'الإجابة الصحيحة هي',explanation:'الشرح',
       flag:'أبلغ عن مشكلة',flagTitle:'الإبلاغ عن مشكلة في هذا السؤال',reason:'السبب',note:'تفاصيل (اختياري)',send:'إرسال',cancel:'إلغاء',thanks:'شكراً، الفريق بيراجعه.',
@@ -171,17 +171,17 @@ var T = {
       confirmSubmit:'تبي تسلّم الاختبار؟',unanswered:'سؤال بدون إجابة',submitNow:'سلّم الحين',keepGoing:'كمّل',
       timeUp:'انتهى الوقت – تم تسليم اختبارك.',submitting:'جاري التسليم…',
       resultTitle:'نتيجتك',passed:'جاهز – فوق خط 70%',notPassed:'مو بعد – الهدف 70%',
-      score:'الدرجة',time:'الوقت',byDomain:'حسب دومين المادة',byPmp:'حسب دومين PMP',byLevel:'حسب المستوى',pmpTitle:'دومينات اختبار PMP (مخطط PMI، يوليو 2026)',pmpSub:'كل سؤال مربوط بعد بدومين PMP اللي يدرّبك عليه. الوزن = نسبته في اختبار PMP الحقيقي. اضغط على الدومين عشان تتدرب عليه.',weight:'وزنه في PMP',inBank:'في البنك',share:'نسبته من البنك',pmpFilter:'دومين PMP',pmpMix:'دومينات PMP',byLecture:'حسب الموضوع (الأضعف أولاً)',review:'راجع إجاباتك',bankTitle:'وش يغطي بنك الأسئلة',bankSub:'٣ دومينات للمادة × ٣ مستويات صعوبة. اضغط على أي رقم عشان تتدرب على هذا الدومين بهذا المستوى.',total:'المجموع',levelMix:'المستويات',levelRandom:'المستويات: مخلوطة عشوائياً',
+      score:'الدرجة',time:'الوقت',byDomain:'حسب دومين PMP',byApproach:'حسب المنهجية',byLevel:'حسب المستوى',apTitle:'منهجية التنفيذ',apSub:'حسب PMI: تقريباً 40% تنبؤية و60% Agile أو هجينة. «عامة» = ما تعتمد على منهجية. اضغط على المنهجية عشان تتدرب عليها.',weight:'وزنه في الاختبار',inBank:'في البنك',share:'نسبته من البنك',approach:'المنهجية',apMix:'المنهجيات',byLecture:'حسب المهمة (الأضعف أولاً)',review:'راجع إجاباتك',bankTitle:'وش يغطي بنك الأسئلة',bankSub:'٣ دومينات PMP × ٣ مستويات صعوبة (مخطط PMI، يوليو 2026). اضغط على أي رقم عشان تتدرب على هذا الدومين بهذا المستوى.',total:'المجموع',levelMix:'المستويات',levelRandom:'المستويات: مخلوطة عشوائياً',
       all:'الكل',wrongOnly:'الخطأ',skipped:'بدون إجابة',yourAnswer:'إجابتك',notAnswered:'ما جاوبت',
-      progressTitle:'تقدّمي',byTopic:'حسب الموضوع',attempts:'سجل الاختبارات التجريبية',noAttempts:'ما سويت اختبار تجريبي بعد.',
-      weakTopics:'مواضيع تحتاج تشتغل عليها',practiseWeak:'تدرّب على هذي المواضيع',date:'التاريخ',mode:'الاختبار',view:'عرض',
+      progressTitle:'تقدّمي',byTopic:'حسب المهمة',attempts:'سجل الاختبارات التجريبية',noAttempts:'ما سويت اختبار تجريبي بعد.',
+      weakTopics:'مهام تحتاج تشتغل عليها',practiseWeak:'تدرّب على هذي المهام',date:'التاريخ',mode:'الاختبار',view:'عرض',
       resume:'عندك اختبار ما خلص.',resumeBtn:'كمّل الاختبار',discard:'تجاهل',
       loadErr:'صار خطأ. حاول مرة ثانية.',minLeft:'دقيقة باقية',invalidNote:'هذي المحاولة ما تنحسب في إحصائيات الفصل (إجابات قليلة أو سريعة جداً).'}
 };
 var MODE_AR = {course:'الاختبار التجريبي للمادة',full:'اختبار كامل الطول',quick:'اختبار سريع'};
 var DIFF_AR = {Easy:'سهل',Medium:'متوسط',Hard:'صعب'};
-var DOM_AR = {1:'الأساسيات والمفاهيم',2:'المنهج التنبؤي',3:'أطر Agile'};
-var PMP_AR = {'People':'الأشخاص','Process':'العمليات','Business Environment':'بيئة الأعمال'};
+var DOM_AR = {1:'الأشخاص',2:'العمليات',3:'بيئة الأعمال'};
+var AP_AR = {Predictive:'تنبؤية',Agile:'Agile',Hybrid:'هجينة',Any:'عامة'};
 
 /* ------------------------------------------------------------ state + storage */
 var S = { cfg:null, view:'home', lang:'en', sid:'', uid:'', nick:'', practice:null, exam:null, result:null, progress:null };
@@ -191,9 +191,9 @@ function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){retu
 function pct(x){ return x==null||isNaN(x) ? '–' : Math.round(x*100)+'%'; }
 function modeLabel(k){ return S.lang==='ar' ? (MODE_AR[k]||k) : (S.cfg && S.cfg.modes[k] ? S.cfg.modes[k].label : k); }
 function domName(d){ return S.lang==='ar' ? DOM_AR[d] : S.cfg.domains[d]; }
-function pmpName(p){ return S.lang==='ar' ? (PMP_AR[p]||p) : p; }
+function apName(a){ return S.lang==='ar' ? (AP_AR[a]||a) : a; }
 function lvlName(l){ return S.lang==='ar' ? (DIFF_AR[l]||l) : l; }
-function lecName(l, name){ return (S.lang==='ar'?'المحاضرة ':'L') + l + ' · ' + (name||''); }
+function lecName(l, name){ return name || ('#'+l); }
 function newId(){ var a='abcdefghijklmnopqrstuvwxyz0123456789',s=''; var r=(window.crypto&&crypto.getRandomValues)?crypto.getRandomValues(new Uint8Array(24)):null; for(var i=0;i<24;i++) s+=a[(r?r[i]:Math.floor(Math.random()*256))%36]; return 's-'+s; }
 
 /* ------------------------------------------------------------ server calls */
@@ -307,14 +307,14 @@ function viewHome(){
   h+='<div class="grid g3" style="margin-top:14px" id="homeStats"><div class="card"><div class="muted">'+esc(t('answered'))+'</div><div class="stat" id="hsA">…</div></div><div class="card"><div class="muted">'+esc(t('accuracy'))+'</div><div class="stat" id="hsB">…</div></div><div class="card"><div class="muted">'+esc(t('weakest'))+'</div><div style="font-weight:700;margin-top:6px" id="hsC">…</div></div></div>';
   if(S.cfg.bankMatrix){
     var LV=S.cfg.levels||['Easy','Medium','Hard'], colT=LV.map(function(){return 0;}), all=0;
-    h+='<div class="card white" style="margin-top:14px"><h3 style="margin-top:0">'+esc(t('bankTitle'))+'</h3><p class="muted" style="margin-top:-4px">'+esc(t('bankSub'))+'</p><div style="overflow-x:auto"><table><thead><tr><th>'+esc(t('domain'))+'</th>'+LV.map(function(l){return '<th>'+esc(lvlName(l))+'</th>';}).join('')+'<th>'+esc(t('total'))+'</th></tr></thead><tbody>'+
-      S.cfg.bankMatrix.map(function(r){ var sum=0; var cells=r.counts.map(function(c,i){ sum+=c; colT[i]+=c; return '<td><a href="#" data-pd="'+r.domain+'" data-pl="'+LV[i]+'">'+c+'</a></td>'; }).join(''); all+=sum; return '<tr><td><b>'+r.domain+'</b> · '+esc(domName(r.domain))+'</td>'+cells+'<td><b>'+sum+'</b></td></tr>'; }).join('')+
-      '<tr><td><b>'+esc(t('total'))+'</b></td>'+colT.map(function(c){return '<td><b>'+c+'</b></td>';}).join('')+'<td><b>'+all+'</b></td></tr></tbody></table></div></div>';
+    h+='<div class="card white" style="margin-top:14px"><h3 style="margin-top:0">'+esc(t('bankTitle'))+'</h3><p class="muted" style="margin-top:-4px">'+esc(t('bankSub'))+'</p><div style="overflow-x:auto"><table><thead><tr><th>'+esc(t('domain'))+'</th>'+LV.map(function(l){return '<th>'+esc(lvlName(l))+'</th>';}).join('')+'<th>'+esc(t('total'))+'</th><th>'+esc(t('weight'))+'</th></tr></thead><tbody>'+
+      S.cfg.bankMatrix.map(function(r){ var sum=0; var cells=r.counts.map(function(c,i){ sum+=c; colT[i]+=c; return '<td><a href="#" data-pd="'+r.domain+'" data-pl="'+LV[i]+'">'+c+'</a></td>'; }).join(''); all+=sum; return '<tr><td><b>'+r.domain+'</b> · '+esc(domName(r.domain))+'</td>'+cells+'<td><b>'+sum+'</b></td><td>'+(S.cfg.weights?pct(S.cfg.weights[r.domain]):'')+'</td></tr>'; }).join('')+
+      '<tr><td><b>'+esc(t('total'))+'</b></td>'+colT.map(function(c){return '<td><b>'+c+'</b></td>';}).join('')+'<td><b>'+all+'</b></td><td><b>100%</b></td></tr></tbody></table></div></div>';
   }
-  if(S.cfg.pmp){
-    var pmpTot=S.cfg.pmp.reduce(function(a,p){return a+p.bank;},0)||1;
-    h+='<div class="card white" style="margin-top:14px"><h3 style="margin-top:0">'+esc(t('pmpTitle'))+'</h3><p class="muted" style="margin-top:-4px">'+esc(t('pmpSub'))+'</p><div style="overflow-x:auto"><table><thead><tr><th>'+esc(t('pmpFilter'))+'</th><th>'+esc(t('weight'))+'</th><th>'+esc(t('inBank'))+'</th><th>'+esc(t('share'))+'</th></tr></thead><tbody>'+
-      S.cfg.pmp.map(function(p){ return '<tr><td><a href="#" data-pp="'+esc(p.pmp)+'"><b>'+esc(pmpName(p.pmp))+'</b></a></td><td>'+pct(p.weight)+'</td><td>'+p.bank+'</td><td>'+pct(p.bank/pmpTot)+'</td></tr>'; }).join('')+'</tbody></table></div></div>';
+  if(S.cfg.approaches){
+    var apTot=S.cfg.approaches.reduce(function(a,p){return a+p.bank;},0)||1;
+    h+='<div class="card white" style="margin-top:14px"><h3 style="margin-top:0">'+esc(t('apTitle'))+'</h3><p class="muted" style="margin-top:-4px">'+esc(t('apSub'))+'</p><div style="overflow-x:auto"><table><thead><tr><th>'+esc(t('approach'))+'</th><th>'+esc(t('inBank'))+'</th><th>'+esc(t('share'))+'</th></tr></thead><tbody>'+
+      S.cfg.approaches.map(function(p){ return '<tr><td><a href="#" data-pa="'+esc(p.approach)+'"><b>'+esc(apName(p.approach))+'</b></a></td><td>'+p.bank+'</td><td>'+pct(p.bank/apTot)+'</td></tr>'; }).join('')+'</tbody></table></div></div>';
   }
   h+='<div class="card" style="margin-top:14px"><label class="f" for="nick">'+esc(t('nickname'))+'</label><div class="row"><input type="text" id="nick" maxlength="30" style="max-width:300px" value="'+esc(S.nick)+'"><button class="btn small dark" id="saveNick">'+esc(t('save'))+'</button></div><div class="muted" style="font-size:13px;margin-top:6px">'+esc(t('nickHint'))+'</div></div>';
   h+='<p class="muted" style="margin-top:14px;font-size:14px">'+esc(t('signedAs'))+' <b>'+esc(S.uid)+'</b> · <a href="#" id="soLink">'+esc(t('signOut'))+'</a> · '+esc(t('bank'))+': <b>'+S.cfg.bankSize+'</b></p>';
@@ -322,7 +322,7 @@ function viewHome(){
   bindGo();
   var rb=document.getElementById('resumeBtn'); if(rb) rb.onclick=function(){ S.exam=saved; go('exam-run'); };
   document.getElementById('soLink').onclick=function(e){ e.preventDefault(); signOut(); };
-  app().querySelectorAll('[data-pp]').forEach(function(a){ a.onclick=function(e){ e.preventDefault(); startPractice({pmp:a.getAttribute('data-pp'),count:10}); }; });
+  app().querySelectorAll('[data-pa]').forEach(function(a){ a.onclick=function(e){ e.preventDefault(); startPractice({approach:a.getAttribute('data-pa'),count:10}); }; });
   app().querySelectorAll('[data-pd]').forEach(function(a){ a.onclick=function(e){ e.preventDefault(); startPractice({domain:a.getAttribute('data-pd'),difficulty:a.getAttribute('data-pl'),count:10}); }; });
   document.getElementById('saveNick').onclick=function(){ S.nick=document.getElementById('nick').value.trim().slice(0,30); store('nick',S.nick); toast('✓'); };
   api('getProgress',S.sid).then(function(p){
@@ -340,7 +340,7 @@ function viewPracticeSetup(){
   var lecOpts=c.lectures.map(function(l){ return '<option value="'+l.lecture+'" data-d="'+l.domain+'">'+esc(lecName(l.lecture,l.name))+' ('+l.count+')</option>'; }).join('');
   var h='<h1>'+esc(t('practiceTitle'))+'</h1><p class="muted">'+esc(t('practiceText'))+'</p><div class="card"><div class="grid g2">'+
     '<div><label class="f" for="fDom">'+esc(t('domain'))+'</label><select id="fDom"><option value="">'+esc(t('any'))+'</option>'+[1,2,3].map(function(d){return '<option value="'+d+'">'+d+' · '+esc(domName(d))+'</option>';}).join('')+'</select></div>'+
-    '<div><label class="f" for="fPmp">'+esc(t('pmpFilter'))+'</label><select id="fPmp"><option value="">'+esc(t('any'))+'</option>'+(S.cfg.pmp||[]).map(function(p){return '<option value="'+esc(p.pmp)+'">'+esc(pmpName(p.pmp))+'</option>';}).join('')+'</select></div>'+
+    '<div><label class="f" for="fPmp">'+esc(t('approach'))+'</label><select id="fPmp"><option value="">'+esc(t('any'))+'</option>'+(S.cfg.approaches||[]).map(function(p){return '<option value="'+esc(p.approach)+'">'+esc(apName(p.approach))+'</option>';}).join('')+'</select></div>'+
     '<div><label class="f" for="fLec">'+esc(t('lecture'))+'</label><select id="fLec"><option value="">'+esc(t('any'))+'</option>'+lecOpts+'</select></div>'+
     '<div><label class="f" for="fDiff">'+esc(t('difficulty'))+'</label><select id="fDiff"><option value="">'+esc(t('any'))+'</option>'+['Easy','Medium','Hard'].map(function(d){return '<option value="'+d+'">'+esc(S.lang==='ar'?DIFF_AR[d]:d)+'</option>';}).join('')+'</select></div>'+
     '<div><label class="f" for="fCount">'+esc(t('count'))+'</label><select id="fCount">'+[10,20,30].map(function(n){return '<option>'+n+'</option>';}).join('')+'</select></div></div>'+
@@ -352,7 +352,7 @@ function viewPracticeSetup(){
   document.getElementById('fDom').onchange=function(){ var d=this.value; document.querySelectorAll('#fLec option[data-d]').forEach(function(o){ o.hidden = d && o.getAttribute('data-d')!==d; }); var sel=document.getElementById('fLec'); if(sel.selectedOptions[0] && sel.selectedOptions[0].hidden) sel.value=''; };
   document.getElementById('pBegin').onclick=function(){
     var f={fDom:val('fDom'),fPmp:val('fPmp'),fLec:val('fLec'),fDiff:val('fDiff'),fCount:val('fCount'),fTaught:chk('fTaught'),fWeak:chk('fWeak')}; store('pfilters',f);
-    startPractice({domain:f.fDom,pmp:f.fPmp,lecture:f.fLec,difficulty:f.fDiff,count:f.fCount,taughtOnly:f.fTaught,weak:f.fWeak});
+    startPractice({domain:f.fDom,approach:f.fPmp,lecture:f.fLec,difficulty:f.fDiff,count:f.fCount,scenarioOnly:f.fTaught,weak:f.fWeak});
   };
 }
 function val(id){ return document.getElementById(id).value; } function chk(id){ return document.getElementById(id).checked; }
@@ -363,7 +363,7 @@ function startPractice(filters){
     S.practice={qs:qs,i:0,sel:null,fb:null,right:0,filters:filters}; go('practice-run');
   }).catch(function(e){ toast(e.message||t('loadErr')); go('practice'); });
 }
-function qMeta(q){ return '<span class="pill">'+esc(domName(q.domain))+'</span> <span class="pill">'+esc(lecName(q.lecture,(S.cfg.lectures.filter(function(l){return l.lecture===q.lecture;})[0]||{}).name))+'</span> <span class="pill">'+esc(S.lang==='ar'?DIFF_AR[q.difficulty]||q.difficulty:q.difficulty)+'</span>'+(q.pmp?' <span class="pill">PMP · '+esc(pmpName(q.pmp))+'</span>':''); }
+function qMeta(q){ return '<span class="pill">'+esc(domName(q.domain))+'</span> <span class="pill">'+esc(lecName(q.lecture,(S.cfg.lectures.filter(function(l){return l.lecture===q.lecture;})[0]||{}).name))+'</span> <span class="pill">'+esc(S.lang==='ar'?DIFF_AR[q.difficulty]||q.difficulty:q.difficulty)+'</span>'+(q.approach?' <span class="pill">'+esc(apName(q.approach))+'</span>':''); }
 function optsHtml(q, sel, fb){
   return '<div class="opts" role="radiogroup">'+q.options.map(function(o,i){
     var k='ABCD'[i], cls='';
@@ -408,7 +408,7 @@ function viewExamList(){
   if(saved) h+='<div class="card white" style="border-color:var(--brand);margin-bottom:14px"><div class="row"><b>'+esc(t('resume'))+'</b><span class="muted">'+esc(modeLabel(saved.mode))+'</span><span class="spacer"></span><button class="btn small" id="resumeBtn">'+esc(t('resumeBtn'))+'</button><button class="btn ghost small" id="discardBtn">'+esc(t('discard'))+'</button></div></div>';
   h+='<div class="grid g3">'+['course','quick','full'].filter(function(k){return S.cfg.modes[k];}).map(function(k){
     var m=S.cfg.modes[k], b=m.blueprint;
-    return '<div class="card white"><h3>'+esc(modeLabel(k))+'</h3><div class="muted" style="margin-bottom:10px">'+m.total+' '+esc(t('questions'))+' · '+m.minutes+' '+esc(t('minutes'))+'</div><div class="muted" style="font-size:13px;margin-bottom:12px">'+[1,2,3].map(function(d){return esc(domName(d))+': '+b[d];}).join('<br>')+(m.pmpMix?'<br><span style="display:inline-block;margin-top:6px">'+esc(t('pmpMix'))+': '+(S.cfg.pmp||[]).map(function(p){return esc(pmpName(p.pmp))+' '+(m.pmpMix[p.pmp]||0);}).join(' · ')+'</span>':'')+'<br><span style="display:inline-block;margin-top:6px">'+(m.levelMix?esc(t('levelMix'))+': '+(S.cfg.levels||['Easy','Medium','Hard']).map(function(l){return esc(lvlName(l))+' '+(m.levelMix[l]||0);}).join(' · '):esc(t('levelRandom')))+'</span></div><button class="btn'+(k==='course'?'':' ghost')+'" data-mode="'+k+'"'+(saved?' disabled':'')+'>'+esc(t('start'))+'</button></div>';
+    return '<div class="card white"><h3>'+esc(modeLabel(k))+'</h3><div class="muted" style="margin-bottom:10px">'+m.total+' '+esc(t('questions'))+' · '+m.minutes+' '+esc(t('minutes'))+'</div><div class="muted" style="font-size:13px;margin-bottom:12px">'+[1,2,3].map(function(d){return esc(domName(d))+': '+b[d];}).join('<br>')+(m.approachMix?'<br><span style="display:inline-block;margin-top:6px">'+esc(t('apMix'))+': '+(S.cfg.approaches||[]).map(function(p){return esc(apName(p.approach))+' '+(m.approachMix[p.approach]||0);}).join(' · ')+'</span>':'')+'<br><span style="display:inline-block;margin-top:6px">'+(m.levelMix?esc(t('levelMix'))+': '+(S.cfg.levels||['Easy','Medium','Hard']).map(function(l){return esc(lvlName(l))+' '+(m.levelMix[l]||0);}).join(' · '):esc(t('levelRandom')))+'</span></div><button class="btn'+(k==='course'?'':' ghost')+'" data-mode="'+k+'"'+(saved?' disabled':'')+'>'+esc(t('start'))+'</button></div>';
   }).join('')+'</div>';
   app().innerHTML=h;
   var rb=document.getElementById('resumeBtn'); if(rb) rb.onclick=function(){ S.exam=saved; go('exam-run'); };
@@ -493,7 +493,7 @@ function viewResult(){
     '<div class="grid g3"><div class="card" style="border-top:6px solid '+(r.passed?'var(--ok)':'var(--bad)')+'"><div class="muted">'+esc(t('score'))+'</div><div class="stat">'+pct(r.pct)+'</div><div>'+r.score+' / '+r.total+'</div><div style="margin-top:6px;font-weight:600;color:'+(r.passed?'var(--ok)':'var(--bad)')+'">'+esc(r.passed?t('passed'):t('notPassed'))+'</div></div>'+
     '<div class="card"><div class="muted">'+esc(t('time'))+'</div><div class="stat">'+Math.round(r.duration)+'</div><div>'+esc(t('minutes'))+'</div></div></div>';
   if(!r.valid) h+='<p class="muted" style="font-size:13px">'+esc(t('invalidNote'))+'</p>';
-  h+='<div class="grid g3" style="margin-top:14px"><div class="card"><h3>'+esc(t('byDomain'))+'</h3>'+bars(r.byDomain,0,function(x){return x.domain+' · '+domName(x.domain);},S.cfg.passMark)+'</div><div class="card"><h3>'+esc(t('byPmp'))+'</h3>'+(r.byPmp&&r.byPmp.length?bars(r.byPmp,0,function(x){return pmpName(x.pmp);},S.cfg.passMark):'<p class="muted">'+esc(t('none'))+'</p>')+'</div><div class="card"><h3>'+esc(t('byLevel'))+'</h3>'+(r.byLevel&&r.byLevel.length?bars(r.byLevel,0,function(x){return lvlName(x.level);},S.cfg.passMark):'<p class="muted">'+esc(t('none'))+'</p>')+'</div></div>';
+  h+='<div class="grid g3" style="margin-top:14px"><div class="card"><h3>'+esc(t('byDomain'))+'</h3>'+bars(r.byDomain,0,function(x){return x.domain+' · '+domName(x.domain);},S.cfg.passMark)+'</div><div class="card"><h3>'+esc(t('byApproach'))+'</h3>'+(r.byApproach&&r.byApproach.length?bars(r.byApproach,0,function(x){return apName(x.approach);},S.cfg.passMark):'<p class="muted">'+esc(t('none'))+'</p>')+'</div><div class="card"><h3>'+esc(t('byLevel'))+'</h3>'+(r.byLevel&&r.byLevel.length?bars(r.byLevel,0,function(x){return lvlName(x.level);},S.cfg.passMark):'<p class="muted">'+esc(t('none'))+'</p>')+'</div></div>';
   h+='<div class="card" style="margin-top:14px"><h3>'+esc(t('byLecture'))+'</h3>'+bars(r.byLecture.slice(0,6),0,function(x){return lecName(x.lecture,x.name);},S.cfg.passMark)+'</div>';
   h+='<h2>'+esc(t('review'))+'</h2><div class="row">'+[['all',t('all')],['wrong',t('wrongOnly')],['skip',t('skipped')]].map(function(f){return '<button class="btn small '+(filter===f[0]?'dark':'ghost')+'" data-f="'+f[0]+'">'+esc(f[1])+'</button>';}).join('')+'</div><div class="card white" style="margin-top:10px">';
   r.review.forEach(function(it,i){
@@ -513,7 +513,7 @@ function viewProgress(){
     S.progress=p;
     var h='<h1>'+esc(t('progressTitle'))+'</h1><div class="grid g3"><div class="card"><div class="muted">'+esc(t('answered'))+'</div><div class="stat">'+p.answered+'</div></div><div class="card"><div class="muted">'+esc(t('accuracy'))+'</div><div class="stat">'+(p.answered?pct(p.correct/p.answered):'–')+'</div></div><div class="card"><div class="muted">'+esc(t('attempts'))+'</div><div class="stat">'+p.attempts.length+'</div></div></div>';
     h+='<div class="grid g2" style="margin-top:14px"><div class="card"><h3>'+esc(t('byDomain'))+'</h3>'+(p.byDomain.length?bars(p.byDomain,0,function(x){return x.domain+' · '+domName(x.domain);},S.cfg.passMark):'<p class="muted">'+esc(t('none'))+'</p>')+'</div>';
-    h+='<div class="card"><h3>'+esc(t('byPmp'))+'</h3>'+(p.byPmp&&p.byPmp.length?bars(p.byPmp,0,function(x){return pmpName(x.pmp);},S.cfg.passMark):'<p class="muted">'+esc(t('none'))+'</p>')+'</div>';
+    h+='<div class="card"><h3>'+esc(t('byApproach'))+'</h3>'+(p.byApproach&&p.byApproach.length?bars(p.byApproach,0,function(x){return apName(x.approach);},S.cfg.passMark):'<p class="muted">'+esc(t('none'))+'</p>')+'</div>';
     h+='<div class="card"><h3>'+esc(t('byLevel'))+'</h3>'+(p.byLevel&&p.byLevel.length?bars(p.byLevel,0,function(x){return lvlName(x.level);},S.cfg.passMark):'<p class="muted">'+esc(t('none'))+'</p>')+'</div>';
     h+='<div class="card"><h3>'+esc(t('weakTopics'))+'</h3>'+(p.weak.length?bars(p.weak,0,function(x){return lecName(x.lecture,x.name);},S.cfg.passMark)+'<button class="btn small" id="weakBtn" style="margin-top:8px">'+esc(t('practiseWeak'))+'</button>':'<p class="muted">'+esc(t('none'))+'</p>')+'</div></div>';
     h+='<h2>'+esc(t('attempts'))+'</h2><div class="card white">'+(p.attempts.length?'<table><thead><tr><th>'+esc(t('date'))+'</th><th>'+esc(t('mode'))+'</th><th>'+esc(t('score'))+'</th><th>'+esc(t('time'))+'</th><th></th></tr></thead><tbody>'+p.attempts.map(function(a){return '<tr><td>'+esc(a.date.replace('T',' ').slice(0,16))+'</td><td>'+esc(modeLabel(a.mode))+'</td><td><b>'+pct(a.pct)+'</b> ('+a.score+'/'+a.total+')</td><td>'+Math.round(a.duration)+' '+esc(t('minutes'))+'</td><td><button class="btn ghost small" data-r="'+esc(a.responseId)+'">'+esc(t('view'))+'</button></td></tr>';}).join('')+'</tbody></table>':'<p class="muted">'+esc(t('noAttempts'))+'</p>')+'</div>';
