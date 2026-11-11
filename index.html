@@ -68,6 +68,12 @@
   .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
   .spacer{flex:1}
   .qtext{font-size:18px;font-weight:600;margin:6px 0 14px;direction:ltr;text-align:left;unicode-bidi:plaintext}
+  .qtext.ar{direction:rtl;text-align:right;line-height:1.8}
+  .opt.ar{text-align:right;direction:rtl}
+  details.enaid{margin:-6px 0 14px;font-size:14px;color:var(--muted,#666)}
+  details.enaid summary{cursor:pointer;font-weight:600}
+  details.enaid .en{direction:ltr;text-align:left;margin-top:6px}
+  details.enaid ol{margin:6px 0 0;padding-left:22px}
   .opts{display:grid;gap:10px;direction:ltr}
   .opt{display:flex;gap:12px;align-items:flex-start;text-align:left;width:100%;background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;color:var(--ink)}
   .opt:hover{border-color:#bdbdbd}
@@ -187,6 +193,13 @@ var T = {
 };
 var MODE_AR = {course:'الاختبار التجريبي للمادة',full:'اختبار كامل الطول',quick:'اختبار سريع'};
 var DIFF_AR = {Easy:'سهل',Medium:'متوسط',Hard:'صعب'};
+var TASK_AR = {'I.1':'تطوير رؤية مشتركة','I.2':'إدارة النزاعات','I.3':'قيادة فريق المشروع','I.4':'إشراك أصحاب المصلحة',
+  'I.5':'مواءمة توقعات أصحاب المصلحة','I.6':'إدارة توقعات أصحاب المصلحة','I.7':'المساعدة في ضمان نقل المعرفة','I.8':'تخطيط الاتصالات وإدارتها',
+  'II.1':'إعداد خطة متكاملة لإدارة المشروع وتخطيط التسليم','II.2':'تحديد نطاق المشروع وإدارته','II.3':'المساعدة في ضمان التسليم القائم على القيمة',
+  'II.4':'تخطيط الموارد وإدارتها','II.5':'تخطيط المشتريات وإدارتها','II.6':'تخطيط الشؤون المالية وإدارتها','II.7':'تخطيط جودة المنتجات والمخرجات وتحسينها',
+  'II.8':'تخطيط الجدول الزمني وإدارته','II.9':'تقييم حالة المشروع','II.10':'إدارة إغلاق المشروع',
+  'III.1':'تحديد حوكمة المشروع وإرساؤها','III.2':'تخطيط امتثال المشروع وإدارته','III.3':'إدارة التغييرات والتحكم بها','III.4':'إزالة العوائق وإدارة المشكلات',
+  'III.5':'تخطيط المخاطر وإدارتها','III.6':'التحسين المستمر','III.7':'دعم التغيير المؤسسي','III.8':'تقييم التغيرات في بيئة الأعمال الخارجية'};
 var DOM_AR = {1:'الأشخاص',2:'العمليات',3:'بيئة الأعمال'};
 var AP_AR = {Predictive:'تنبؤية',Agile:'Agile',Hybrid:'هجينة',Any:'عامة'};
 
@@ -200,7 +213,22 @@ function modeLabel(k){ return S.lang==='ar' ? (MODE_AR[k]||k) : (S.cfg && S.cfg.
 function domName(d){ return S.lang==='ar' ? DOM_AR[d] : S.cfg.domains[d]; }
 function apName(a){ return S.lang==='ar' ? (AP_AR[a]||a) : a; }
 function lvlName(l){ return S.lang==='ar' ? (DIFF_AR[l]||l) : l; }
-function lecName(l, name){ return name || ('#'+l); }
+function lecName(l, name){
+  if(!name) return '#'+l;
+  if(S.lang==='ar'){ var code=String(name).split(' ')[0]; if(TASK_AR[code]) return code+' '+TASK_AR[code]; }
+  return name;
+}
+// Arabic language aid: questions come with textAr / optionsAr / explanationAr when a translation exists
+function arOn(q){ return S.lang==='ar' && q && !!q.textAr; }
+function qText(q){ return arOn(q) ? q.textAr : q.text; }
+function qOpts(q){ return (arOn(q) && q.optionsAr && q.optionsAr.length===4) ? q.optionsAr : q.options; }
+function qExpl(o){ return (S.lang==='ar' && o && o.explanationAr) ? o.explanationAr : (o ? o.explanation : ''); }
+function qTextHtml(q, style){
+  var h='<div class="qtext'+(arOn(q)?' ar':'')+'"'+(style?' style="'+style+'"':'')+'>'+esc(qText(q))+'</div>';
+  if(arOn(q)) h+='<details class="enaid"'+(S.enOpen?' open':'')+'><summary>النص الأصلي بالإنجليزي (لغة الاختبار)</summary><div class="en"><div style="font-weight:600">'+esc(q.text)+'</div><ol type="A">'+q.options.map(function(o){return '<li>'+esc(o)+'</li>';}).join('')+'</ol></div></details>';
+  return h;
+}
+document.addEventListener('toggle',function(e){ if(e.target && e.target.classList && e.target.classList.contains('enaid')) S.enOpen=e.target.open; },true);
 function newId(){ var a='abcdefghijklmnopqrstuvwxyz0123456789',s=''; var r=(window.crypto&&crypto.getRandomValues)?crypto.getRandomValues(new Uint8Array(24)):null; for(var i=0;i<24;i++) s+=a[(r?r[i]:Math.floor(Math.random()*256))%36]; return 's-'+s; }
 
 /* ------------------------------------------------------------ server calls */
@@ -377,17 +405,18 @@ function startPractice(filters){
 }
 function qMeta(q){ return '<span class="pill">'+esc(domName(q.domain))+'</span> <span class="pill">'+esc(lecName(q.lecture,(S.cfg.lectures.filter(function(l){return l.lecture===q.lecture;})[0]||{}).name))+'</span> <span class="pill">'+esc(S.lang==='ar'?DIFF_AR[q.difficulty]||q.difficulty:q.difficulty)+'</span>'+(q.approach?' <span class="pill">'+esc(apName(q.approach))+'</span>':''); }
 function optsHtml(q, sel, fb){
-  return '<div class="opts" role="radiogroup">'+q.options.map(function(o,i){
+  var ar=arOn(q);
+  return '<div class="opts" role="radiogroup">'+qOpts(q).map(function(o,i){
     var k='ABCD'[i], cls='';
     if(fb){ if(k===fb.key) cls=' ok'; else if(k===sel) cls=' bad'; }
-    return '<button class="opt'+cls+'" role="radio" data-k="'+k+'" aria-pressed="'+(sel===k)+'" aria-checked="'+(sel===k)+'"'+(fb?' disabled':'')+'><span class="k">'+k+'</span><span>'+esc(o)+'</span></button>';
+    return '<button class="opt'+cls+(ar?' ar':'')+'" role="radio" data-k="'+k+'" aria-pressed="'+(sel===k)+'" aria-checked="'+(sel===k)+'"'+(fb?' disabled':'')+'><span class="k">'+k+'</span><span dir="auto">'+esc(o)+'</span></button>';
   }).join('')+'</div>';
 }
 function viewPracticeRun(){
   var P=S.practice, q=P.qs[P.i];
   var h='<div class="row"><b>'+esc(t('question'))+' '+(P.i+1)+' '+esc(t('of'))+' '+P.qs.length+'</b><span class="spacer"></span><div class="bar" style="width:160px"><i style="width:'+Math.round(P.i/P.qs.length*100)+'%"></i></div></div>'+
-    '<div class="card white" style="margin-top:12px"><div>'+qMeta(q)+'</div><div class="qtext">'+esc(q.text)+'</div>'+optsHtml(q,P.sel,P.fb);
-  if(P.fb) h+='<div class="feedback '+(P.fb.correct?'ok':'bad')+'"><b>'+esc(P.fb.correct?t('correct'):t('incorrect'))+'</b> '+(P.fb.correct?'':esc(t('theAnswer'))+' <b>'+P.fb.key+'</b>.')+'<div style="margin-top:6px"><b>'+esc(t('explanation'))+':</b> '+esc(P.fb.explanation)+'</div></div>';
+    '<div class="card white" style="margin-top:12px"><div>'+qMeta(q)+'</div>'+qTextHtml(q)+optsHtml(q,P.sel,P.fb);
+  if(P.fb) h+='<div class="feedback '+(P.fb.correct?'ok':'bad')+'"><b>'+esc(P.fb.correct?t('correct'):t('incorrect'))+'</b> '+(P.fb.correct?'':esc(t('theAnswer'))+' <b>'+P.fb.key+'</b>.')+'<div style="margin-top:6px"><b>'+esc(t('explanation'))+':</b> <span dir="auto">'+esc(qExpl(P.fb))+'</span></div></div>';
   h+='<div class="row" style="margin-top:16px"><button class="btn ghost small" id="flagBtn">⚑ '+esc(t('flag'))+'</button><span class="spacer"></span>'+
      (P.fb ? '<button class="btn" id="nextBtn">'+esc(P.i+1<P.qs.length?t('next'):t('finish'))+'</button>' : '<button class="btn" id="checkBtn"'+(P.sel?'':' disabled')+'>'+esc(t('check'))+'</button>')+'</div></div>';
   app().innerHTML=h;
@@ -445,7 +474,7 @@ function viewExamRun(){
   var E=S.exam; if(!E){ go('exam'); return; }
   var q=E.questions[E.idx], n=E.questions.length, done=Object.keys(E.answers).length;
   var h='<div class="examhead"><div class="row"><b>'+esc(modeLabel(E.mode))+'</b><span class="muted">'+done+'/'+n+'</span><span class="spacer"></span><span class="timer" id="timer" aria-live="off">--:--</span><button class="btn small dark" id="subBtn">'+esc(t('submit'))+'</button></div></div>';
-  h+='<div class="grid" style="grid-template-columns:minmax(0,1fr)"><div class="card white"><div class="row"><b>'+esc(t('question'))+' '+(E.idx+1)+' '+esc(t('of'))+' '+n+'</b><span class="spacer"></span><button class="btn ghost small" id="markBtn" aria-pressed="'+(!!E.marked[q.id])+'" style="'+(E.marked[q.id]?'border-color:var(--mark);color:var(--mark)':'')+'">⚑ '+esc(E.marked[q.id]?t('marked'):t('markReview'))+'</button></div><div class="qtext">'+esc(q.text)+'</div>'+optsHtml(q,E.answers[q.id]||null,null)+
+  h+='<div class="grid" style="grid-template-columns:minmax(0,1fr)"><div class="card white"><div class="row"><b>'+esc(t('question'))+' '+(E.idx+1)+' '+esc(t('of'))+' '+n+'</b><span class="spacer"></span><button class="btn ghost small" id="markBtn" aria-pressed="'+(!!E.marked[q.id])+'" style="'+(E.marked[q.id]?'border-color:var(--mark);color:var(--mark)':'')+'">⚑ '+esc(E.marked[q.id]?t('marked'):t('markReview'))+'</button></div>'+qTextHtml(q)+optsHtml(q,E.answers[q.id]||null,null)+
      '<div class="row" style="margin-top:16px"><button class="btn ghost" id="prevBtn"'+(E.idx===0?' disabled':'')+'>‹ '+esc(t('prev'))+'</button><span class="spacer"></span><button class="btn" id="nextBtn"'+(E.idx===n-1?' disabled':'')+'>'+esc(t('next'))+' ›</button></div></div>'+
      '<div class="card"><b>'+esc(t('navigator'))+'</b><div class="navgrid" style="margin-top:10px">'+E.questions.map(function(qq,i){ var c=(E.answers[qq.id]?'ans ':'')+(E.marked[qq.id]?'mk ':'')+(i===E.idx?'cur':''); return '<button class="'+c+'" data-i="'+i+'" aria-label="'+esc(t('question'))+' '+(i+1)+'">'+(i+1)+'</button>'; }).join('')+'</div><div class="legend"><span><i style="background:var(--ink)"></i>'+esc(t('legAns'))+'</span><span><i style="background:#fff;border:2px solid var(--mark)"></i>'+esc(t('legMark'))+'</span><span><i style="background:#fff;outline:2px solid var(--brand)"></i>'+esc(t('legCur'))+'</span></div></div></div>';
   app().innerHTML=h;
@@ -510,7 +539,7 @@ function viewResult(){
   h+='<h2>'+esc(t('review'))+'</h2><div class="row">'+[['all',t('all')],['wrong',t('wrongOnly')],['skip',t('skipped')]].map(function(f){return '<button class="btn small '+(filter===f[0]?'dark':'ghost')+'" data-f="'+f[0]+'">'+esc(f[1])+'</button>';}).join('')+'</div><div class="card white" style="margin-top:10px">';
   r.review.forEach(function(it,i){
     if(filter==='wrong'&&(it.correct||!it.selected)) return; if(filter==='skip'&&it.selected) return;
-    h+='<div class="review-item"><div class="row"><b>'+(i+1)+'.</b> <span class="tag '+(it.correct?'ok':(it.selected?'bad':'skip'))+'">'+esc(it.correct?t('correct'):(it.selected?t('incorrect'):t('notAnswered')))+'</span><span class="spacer"></span><button class="btn ghost small" data-flag="'+esc(it.id)+'">⚑</button></div><div style="margin:6px 0">'+qMeta(it)+'</div><div class="qtext" style="font-size:16px">'+esc(it.text)+'</div>'+optsHtml({options:it.options},it.selected||null,{key:it.key})+'<div class="feedback '+(it.correct?'ok':'bad')+'"><b>'+esc(t('explanation'))+':</b> '+esc(it.explanation)+'</div></div>';
+    h+='<div class="review-item"><div class="row"><b>'+(i+1)+'.</b> <span class="tag '+(it.correct?'ok':(it.selected?'bad':'skip'))+'">'+esc(it.correct?t('correct'):(it.selected?t('incorrect'):t('notAnswered')))+'</span><span class="spacer"></span><button class="btn ghost small" data-flag="'+esc(it.id)+'">⚑</button></div><div style="margin:6px 0">'+qMeta(it)+'</div>'+qTextHtml(it,'font-size:16px')+optsHtml(it,it.selected||null,{key:it.key})+'<div class="feedback '+(it.correct?'ok':'bad')+'"><b>'+esc(t('explanation'))+':</b> <span dir="auto">'+esc(qExpl(it))+'</span></div></div>';
   });
   h+='</div><div class="row" style="margin-top:16px"><button class="btn" data-go="practice">'+esc(t('startPractice'))+'</button><button class="btn ghost" data-go="progress">'+esc(t('progress'))+'</button></div>';
   app().innerHTML=h; bindGo();
