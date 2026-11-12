@@ -16,6 +16,9 @@
   main{max-width:1180px;margin:0 auto;padding:20px 18px 50px}
   h1{font-size:24px;margin:0 0 4px} h2{font-size:18px;margin:26px 0 10px} h3{font-size:15px;margin:0 0 8px}
   .muted{color:var(--muted)}
+  .examtabs{display:inline-flex;border:1.5px solid var(--ink);border-radius:10px;overflow:hidden}
+  .examtabs button{border:0;background:#fff;padding:9px 18px;font-weight:700;font-size:15px;cursor:pointer;color:var(--ink)}
+  .examtabs button[aria-selected=true]{background:var(--brand,#F7941D);color:#fff}
   .grid{display:grid;gap:14px} .k4{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))} .g2{grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}
   .card{background:var(--card);border-radius:var(--radius);padding:16px}
   .card.white{background:#fff;border:1px solid var(--line)}
@@ -91,9 +94,11 @@ function login(){
 }
 function shell(){
   var d0=new Date(), today=d0.getFullYear()+'-'+String(d0.getMonth()+1).padStart(2,'0')+'-'+String(d0.getDate()).padStart(2,'0');
-  $('app').innerHTML='<div class="row" style="justify-content:space-between;align-items:center"><div><h1>Class results</h1><div class="muted" id="sub"></div></div></div>'+
+  $('app').innerHTML='<div class="row" style="justify-content:space-between;align-items:center"><div><h1>Class results · <span id="exTitle">'+EXAM+'</span></h1><div class="muted" id="sub"></div></div>'+
+   '<div class="examtabs" role="tablist" aria-label="Exam">'+['PMP','CAPM'].map(function(x){ return '<button role="tab" data-exam="'+x+'" aria-selected="'+(x===EXAM)+'">'+x+'</button>'; }).join('')+'</div></div>'+
+   '<p class="note" style="margin:6px 0 0">PMP and CAPM have separate dashboards: each has its own domains, tasks, weights, exams and question bank.</p>'+
    '<div class="card white" style="margin-top:14px"><div class="row">'+
-   '<div><label for="fMode">Exam</label><select id="fMode"><option value="course">Course mock exam (60 Q)</option><option value="quick">Quick quiz (20 Q)</option><option value="full">Full-length PMP simulation (180 Q)</option></select></div>'+
+   '<div><label for="fMode">Exam</label><select id="fMode">'+modeOptions(EXAM_MODES[EXAM])+'</select></div>'+
    '<div><label for="fFrom">From</label><input type="date" id="fFrom"></div><div><label for="fTo">To</label><input type="date" id="fTo" value="'+today+'"></div>'+
    '<div><label for="fValid">Attempts</label><select id="fValid"><option value="1">Valid only (Table H.2)</option><option value="0">All attempts</option></select></div>'+
    '<div><button class="btn" id="apply">Apply</button></div><div><button class="btn dark" id="addBtn">＋ Add questions</button></div><div style="flex:1"></div>'+
@@ -101,12 +106,25 @@ function shell(){
    '<div id="addq" class="card white hide" style="margin-top:14px"></div>'+
    '<div id="dash"><div class="center"><div class="muted">Loading…</div></div></div>';
   $('addBtn').onclick=toggleAdd;
+  document.querySelectorAll('[data-exam]').forEach(function(b){ b.onclick=function(){ switchExam(b.getAttribute('data-exam')); }; });
   $('apply').onclick=load; $('expR').onclick=function(){ exportCsv('responses'); }; $('expA').onclick=function(){ exportCsv('answers'); }; $('expS').onclick=function(){ exportCsv('students'); };
+}
+var EXAM='PMP';
+var EXAM_MODES={PMP:[{mode:'course',label:'PMP mock exam',total:60},{mode:'quick',label:'PMP quick quiz',total:20},{mode:'full',label:'Full-length PMP simulation',total:180}],
+  CAPM:[{mode:'capm_course',label:'CAPM mock exam',total:60},{mode:'capm_quick',label:'CAPM quick quiz',total:20},{mode:'capm_full',label:'Full-length CAPM simulation',total:150}]};
+function modeOptions(list, sel){ return list.slice().sort(function(a,b){ return (/course/.test(b.mode)?1:0)-(/course/.test(a.mode)?1:0) || a.total-b.total; }).map(function(m){ return '<option value="'+m.mode+'"'+(m.mode===sel?' selected':'')+'>'+esc(m.label)+' ('+m.total+' Q)</option>'; }).join(''); }
+function switchExam(x){
+  if(x===EXAM) return;
+  EXAM=x; DATA=null; SORT={k:'p',dir:1};
+  document.querySelectorAll('[data-exam]').forEach(function(b){ b.setAttribute('aria-selected', String(b.getAttribute('data-exam')===x)); });
+  $('exTitle').textContent=x; $('fMode').innerHTML=modeOptions(EXAM_MODES[x]);
+  if(!$('addq').classList.contains('hide')){ $('addq').classList.add('hide'); toggleAdd(); }
+  load();
 }
 function load(){
   $('dash').innerHTML='<div class="center"><div class="muted">Loading…</div></div>';
-  api('adminStats',TOKEN,{mode:$('fMode').value,from:$('fFrom').value,to:$('fTo').value,validOnly:$('fValid').value==='1'})
-    .then(function(d){ DATA=d; draw(); })
+  api('adminStats',TOKEN,{exam:EXAM,mode:$('fMode').value,from:$('fFrom').value,to:$('fTo').value,validOnly:$('fValid').value==='1'})
+    .then(function(d){ if(d.exam!==EXAM) return; DATA=d; if(d.modes){ EXAM_MODES[d.exam]=d.modes; $('fMode').innerHTML=modeOptions(d.modes,d.mode); } draw(); })
     .catch(function(e){ $('dash').innerHTML='<p class="err">'+esc(e.message)+'</p>'; if(/log in/i.test(e.message)) setTimeout(function(){ location.reload(); },1500); });
 }
 function kpi(label,value,target,good){ var cls=good==null?'neu':(good?'okb':'badb'); return '<div class="card kpi '+cls+'"><div class="muted">'+esc(label)+'</div><div class="v">'+value+'</div><div class="tgt">'+esc(target)+(good===false?' <b style="color:var(--bad)">· below target</b>':'')+'</div></div>'; }
@@ -114,12 +132,13 @@ function draw(){
   var d=DATA, pm=d.passMark;
   $('sub').textContent=d.modeLabel+' · '+d.responses+' attempts counted'+(d.allResponses!==d.responses?' ('+d.allResponses+' in total)':'')+' · '+d.registered+' students registered';
   if(!d.responses){ $('dash').innerHTML='<div class="card" style="margin-top:14px"><b>No attempts yet for these filters.</b><p class="muted">Share the student link and come back once people have taken the exam. Data is saved in <a href="'+esc(d.sheetUrl)+'" target="_blank">the Google Sheet</a>.</p></div>'+flagsHtml(d); return; }
+  var cm=(d.modes||[]).filter(function(m){ return /course/.test(m.mode); })[0], target=cm?cm.minutes:80;
   var h='<div class="grid k4" style="margin-top:14px">'+
     kpi('Average score',pct(d.avgScore),'Target ≥ 70%',d.avgScore>=pm)+
     kpi('Readiness rate',pct(d.readiness),'% of attempts scoring ≥ 70% · target ≥ 60%',d.readiness>=0.6)+
-    kpi('Median completion time',d.medianMinutes==null?'–':Math.round(d.medianMinutes)+' min','Target ≤ 80 min (course exam)',d.mode==='course'?d.medianMinutes<=80:null)+
+    kpi('Median completion time',d.medianMinutes==null?'–':Math.round(d.medianMinutes)+' min','Target ≤ '+target+' min ('+d.exam+' mock exam)',cm&&d.mode===cm.mode?d.medianMinutes<=target:null)+
     kpi('Attempts',String(d.responses),'Valid attempts in the selected period',null)+'</div>';
-  h+='<div class="grid g2" style="margin-top:14px"><div class="card"><h3>Accuracy by PMP domain <span class="muted" style="font-weight:400">(PMI exam outline, July 2026 · line = 65%)</span></h3>'+
+  h+='<div class="grid g2" style="margin-top:14px"><div class="card"><h3>Accuracy by '+esc(d.exam)+' domain <span class="muted" style="font-weight:400">('+esc(d.outline)+' · line = 65%)</span></h3>'+
     d.byDomain.map(function(x){ var low=x.accuracy!=null&&x.accuracy<d.domainFlag; return '<div class="metric"><div>'+x.domain+' · '+esc(x.name)+(d.weights?' <span class="muted">(exam weight '+pct(d.weights[x.domain])+')</span>':'')+(low?'<span class="flag">⚑ below 65%</span>':'')+'</div><b>'+pct(x.accuracy)+'</b><div class="bar '+(x.accuracy==null?'':(low?'bad':'ok'))+'" style="grid-column:1/-1"><i style="width:'+(x.accuracy==null?0:Math.round(x.accuracy*100))+'%"></i><span class="line" style="left:'+Math.round(d.domainFlag*100)+'%"></span></div></div>'; }).join('')+'</div>';
   var max=Math.max.apply(null,d.histogram.concat([1]));
   h+='<div class="card"><h3>Score distribution <span class="muted" style="font-weight:400">(green = 70% and above)</span></h3><div class="hist">'+d.histogram.map(function(n,i){ return '<div class="'+(i>=7?'pass':'')+'" style="height:'+Math.round(n/max*100)+'%" title="'+n+' attempts"><span>'+(n||'')+'</span></div>'; }).join('')+'</div><div class="hlab">'+d.histogram.map(function(n,i){ return '<div>'+(i*10)+'–'+(i*10+9)+'</div>'; }).join('')+'</div></div></div>';
@@ -134,7 +153,7 @@ function draw(){
       d.domainLevel.map(function(r){ return '<tr><td><b>'+r.domain+'</b> · '+esc(r.name)+'</td>'+r.cells.map(function(c){ var low=c.accuracy!=null&&c.accuracy<d.domainFlag; return '<td class="'+(c.accuracy==null?'':(low?'lo':'hi'))+'"><b>'+pct(c.accuracy)+'</b>'+(low?' ⚑':'')+'<div class="muted" style="font-size:11px">'+c.attempts+' answers</div></td>'; }).join('')+'</tr>'; }).join('')+
       '</tbody></table></div><p class="note" style="margin:8px 0 0">Shows whether a weak domain is weak at every level or only on hard questions.</p></div></div>';
   }
-  h+='<div class="card" style="margin-top:14px"><h3>Accuracy by PMP task, lowest first <span class="muted" style="font-weight:400">(the 3 lowest are flagged for review)</span></h3>'+
+  h+='<div class="card" style="margin-top:14px"><h3>Accuracy by '+esc(d.exam)+' task, lowest first <span class="muted" style="font-weight:400">(the 3 lowest are flagged for review)</span></h3>'+
     d.byLecture.map(function(x){ return '<div class="metric"><div>'+esc(x.name)+(x.flag?'<span class="flag">⚑ review</span>':'')+' <span class="muted">('+x.attempts+' answers)</span></div><b>'+pct(x.accuracy)+'</b><div class="bar '+(x.flag?'bad':(x.accuracy>=pm?'ok':''))+'" style="grid-column:1/-1"><i style="width:'+Math.round(x.accuracy*100)+'%"></i><span class="line" style="left:'+Math.round(pm*100)+'%"></span></div></div>'; }).join('')+'</div>';
   h+='<h2>Students</h2><p class="note">One row per university ID for the selected exam and period. Ready = best score at or above 70%. A student who forgot the PIN: clear the PinHash cell of that ID in the Students sheet, then the student signs in again and chooses a new PIN.</p><div class="tablewrap"><table><thead><tr><th>University ID</th><th>Nickname</th><th>Attempts</th><th>Best</th><th>Last</th><th>Average</th><th>Last attempt</th><th>Ready</th></tr></thead><tbody>'+
     d.students.map(function(x){ return '<tr><td><b>'+esc(x.studentId)+'</b></td><td>'+esc(x.nickname)+'</td><td>'+x.attempts+'</td><td><b>'+pct(x.best)+'</b></td><td>'+pct(x.last)+'</td><td>'+pct(x.avg)+'</td><td>'+esc(String(x.lastDate).replace('T',' ').slice(0,16))+'</td><td>'+(x.ready?'<span style="color:var(--ok);font-weight:700">✓</span>':'<span style="color:var(--bad)">✗</span>')+'</td></tr>'; }).join('')+'</tbody></table></div>';
@@ -152,7 +171,12 @@ function flagsHtml(d){
   return '<h2>Reported questions</h2><div class="tablewrap"><table><thead><tr><th>ID</th><th>Reports</th><th>Reasons</th><th>Notes</th></tr></thead><tbody>'+d.flags.map(function(f){ return '<tr><td><b>'+esc(f.id)+'</b></td><td>'+f.count+'</td><td>'+Object.keys(f.reasons).map(function(r){return esc(r)+' ('+f.reasons[r]+')';}).join(', ')+'</td><td>'+f.notes.slice(0,3).map(esc).join('<br>')+'</td></tr>'; }).join('')+'</tbody></table></div><p class="note">To close a report, set its Status to Closed in the Flags sheet. To fix a question, edit it in the Questions sheet (or set Active = FALSE).</p>';
 }
 /* ------------------------------------------------------------ add questions from an Excel template */
-var TPL_COLS=['QuestionID','Status','PMP_Task','Approach','Item_Type','Difficulty','Question','Option_A','Option_B','Option_C','Option_D','Correct_Option','Explanation','Source'];
+function tplCols(x){ return ['QuestionID','Status',(x==='CAPM'?'CAPM_Task':'PMP_Task'),'Approach','Item_Type','Difficulty','Question','Option_A','Option_B','Option_C','Option_D','Correct_Option','Explanation','Source']; }
+var ALL_COLS=tplCols('PMP').concat(['CAPM_Task','Task']);
+var CAPM_TASKS=[['1.1','Project Management Fundamentals and Core Concepts','Demonstrate an understanding of the various project life cycles and processes'],['1.2','Project Management Fundamentals and Core Concepts','Demonstrate an understanding of project management planning'],['1.3','Project Management Fundamentals and Core Concepts','Demonstrate an understanding of project roles and responsibilities'],['1.4','Project Management Fundamentals and Core Concepts','Determine how to follow and execute planned strategies or frameworks'],['1.5','Project Management Fundamentals and Core Concepts','Demonstrate an understanding of common problem-solving tools and techniques'],
+ ['2.1','Predictive, Plan-Based Methodologies','Explain when it is appropriate to use a predictive, plan-based approach'],['2.2','Predictive, Plan-Based Methodologies','Demonstrate an understanding of a project management plan schedule'],['2.3','Predictive, Plan-Based Methodologies','Determine how to document project controls of predictive, plan-based projects'],
+ ['3.1','Agile Frameworks/Methodologies','Explain when it is appropriate to use an adaptive approach'],['3.2','Agile Frameworks/Methodologies','Determine how to plan project iterations'],['3.3','Agile Frameworks/Methodologies','Determine how to document project controls for an adaptive project'],['3.4','Agile Frameworks/Methodologies','Explain the components of an adaptive plan'],['3.5','Agile Frameworks/Methodologies','Determine how to prepare and execute task management steps'],
+ ['4.1','Business Analysis Frameworks','Demonstrate an understanding of business analysis (BA) roles and responsibilities'],['4.2','Business Analysis Frameworks','Determine how to conduct stakeholder communication'],['4.3','Business Analysis Frameworks','Determine how to gather requirements'],['4.4','Business Analysis Frameworks','Demonstrate an understanding of product roadmaps'],['4.5','Business Analysis Frameworks','Determine how project methodologies influence business analysis processes'],['4.6','Business Analysis Frameworks','Validate requirements through product delivery']];
 var PMP_TASKS=[['I.1','People','Develop a common vision'],['I.2','People','Manage conflicts'],['I.3','People','Lead the project team'],['I.4','People','Engage stakeholders'],['I.5','People','Align stakeholder expectations'],['I.6','People','Manage stakeholder expectations'],['I.7','People','Help ensure knowledge transfer'],['I.8','People','Plan and manage communication'],
  ['II.1','Process','Develop an integrated project management plan and plan delivery'],['II.2','Process','Develop and manage project scope'],['II.3','Process','Help ensure value-based delivery'],['II.4','Process','Plan and manage resources'],['II.5','Process','Plan and manage procurement'],['II.6','Process','Plan and manage finance'],['II.7','Process','Plan and optimize quality of products/deliverables'],['II.8','Process','Plan and manage schedule'],['II.9','Process','Evaluate project status'],['II.10','Process','Manage project closure'],
  ['III.1','Business Environment','Define and establish project governance'],['III.2','Business Environment','Plan and manage project compliance'],['III.3','Business Environment','Manage and control changes'],['III.4','Business Environment','Remove impediments and manage issues'],['III.5','Business Environment','Plan and manage risk'],['III.6','Business Environment','Continuous improvement'],['III.7','Business Environment','Support organizational change'],['III.8','Business Environment','Evaluate external business environment changes']];
@@ -160,11 +184,12 @@ var PENDING=null;
 function toggleAdd(){
   var box=$('addq'); if(!box.classList.contains('hide')){ box.classList.add('hide'); return; }
   box.classList.remove('hide');
-  box.innerHTML='<h2 style="margin-top:0">Add questions to the bank</h2>'+
-    '<ol class="steps"><li><b>Download the Excel template.</b> <button class="btn ghost" id="tplBtn">Download template</button></li>'+
-    '<li><b>Fill one row per question</b> in the sheet <i>Questions</i>. The sheet <i>Allowed values</i> lists the 26 PMP task codes (I.1–III.8) and the other choices; the sheet <i>Example</i> shows a filled row. Leave QuestionID empty to number new questions automatically (A001, A002 …).</li>'+
+  var capm=EXAM==='CAPM';
+  box.innerHTML='<h2 style="margin-top:0">Add questions to the '+EXAM+' bank</h2>'+
+    '<ol class="steps"><li><b>Download the '+EXAM+' Excel template.</b> <button class="btn ghost" id="tplBtn">Download '+EXAM+' template</button></li>'+
+    '<li><b>Fill one row per question</b> in the sheet <i>Questions</i>. The sheet <i>Allowed values</i> lists the '+(capm?'19 CAPM task codes (1.1–4.6)':'26 PMP task codes (I.1–III.8)')+' and the other choices; the sheet <i>Example</i> shows a filled row. Leave QuestionID empty to number new questions automatically ('+(capm?'C321, C322 …':'A001, A002 …')+').</li>'+
     '<li><b>Upload the filled file.</b> <input type="file" id="upFile" accept=".xlsx,.xls,.csv"> The file is checked first; nothing is added until you confirm.</li></ol>'+
-    '<p class="note">New questions go to <b>Bank</b> (practice, quick quiz and full-length exam) or <b>Reserve</b>. The 60-question course exam set stays fixed so its 20 / 25 / 15 blueprint does not change.</p>'+
+    '<p class="note">Questions are added to the <b>'+EXAM+'</b> bank only (switch the tab above to add to the other exam). New questions go to <b>Bank</b> (practice and all mock exams) or <b>Reserve</b>.'+(capm?'':' The 60-question PMP mock exam set stays fixed so its 20 / 25 / 15 blueprint does not change.')+'</p>'+
     '<div id="upOut"></div>';
   $('tplBtn').onclick=downloadTemplate;
   $('upFile').onchange=function(){ if(this.files[0]) readUpload(this.files[0]); };
@@ -172,17 +197,17 @@ function toggleAdd(){
 function needXlsx(){ if(!window.XLSX){ $('upOut').innerHTML='<p class="bad-msg">The Excel reader did not load. Check your internet connection and reload the page.</p>'; return false; } return true; }
 function downloadTemplate(){
   if(!needXlsx()) return;
-  var wb=XLSX.utils.book_new();
+  var wb=XLSX.utils.book_new(), capm=EXAM==='CAPM', TPL_COLS=tplCols(EXAM);
   var q=XLSX.utils.aoa_to_sheet([TPL_COLS]); q['!cols']=[10,9,9,11,11,10,60,30,30,30,30,13,50,20].map(function(w){return {wch:w};});
   XLSX.utils.book_append_sheet(wb,q,'Questions');
-  var ex=XLSX.utils.aoa_to_sheet([TPL_COLS,['','Bank','III.5','Hybrid','Scenario','Medium','During a sprint review, the team reports that a key supplier may deliver late. What should the project manager do first?','Wait for the supplier to confirm the delay','Assess the risk and update the risk register with a response','Ask the sponsor for more budget','Remove the feature from the backlog','B','A possible late delivery is a risk: assess it and plan a response before it becomes an issue.','Instructor']]);
+  var ex=XLSX.utils.aoa_to_sheet([TPL_COLS,['','Bank',(capm?'1.4':'III.5'),'Hybrid','Scenario','Medium','During a sprint review, the team reports that a key supplier may deliver late. What should the project manager do first?','Wait for the supplier to confirm the delay','Assess the risk and update the risk register with a response','Ask the sponsor for more budget','Remove the feature from the backlog','B','A possible late delivery is a risk: assess it and plan a response before it becomes an issue.','Instructor']]);
   ex['!cols']=q['!cols']; XLSX.utils.book_append_sheet(wb,ex,'Example');
-  var av=[['PMP_Task (code)','PMP domain','Task'],].concat(PMP_TASKS);
+  var av=[[(capm?'CAPM_Task':'PMP_Task')+' (code)',EXAM+' domain','Task']].concat(capm?CAPM_TASKS:PMP_TASKS);
   av.push([],['Approach','Predictive / Agile / Hybrid / Any'],['Item_Type','Scenario / Calculation / Knowledge'],['Difficulty','Easy / Medium / Hard'],['Status','Bank / Reserve (empty = Bank)'],['Correct_Option','A / B / C / D']);
   var a=XLSX.utils.aoa_to_sheet(av); a['!cols']=[{wch:16},{wch:22},{wch:62}]; XLSX.utils.book_append_sheet(wb,a,'Allowed values');
-  var how=XLSX.utils.aoa_to_sheet([['How to fill the Questions sheet'],[''],['1. One row per question. Do not change the column names in row 1.'],['2. QuestionID: leave empty to number automatically, or use your own new ID (letters and digits).'],['3. PMP_Task: the task code only, e.g. II.6. The PMP domain is set from it.'],['4. Question, Option_A–Option_D and Correct_Option are required; the four options must be different.'],['5. Explanation: why the correct answer is right (shown to students after they answer).'],['6. Save the file and upload it on the instructor page: Add questions → Upload.'],['7. Before a new question is used in a graded exam, two members should check its answer key.']]);
+  var how=XLSX.utils.aoa_to_sheet([['How to fill the Questions sheet'],[''],['1. One row per question. Do not change the column names in row 1.'],['2. QuestionID: leave empty to number automatically, or use your own new ID (letters and digits).'],[capm?'3. CAPM_Task: the task code only, e.g. 2.3. The CAPM domain is set from it.':'3. PMP_Task: the task code only, e.g. II.6. The PMP domain is set from it.'],['4. Question, Option_A–Option_D and Correct_Option are required; the four options must be different.'],['5. Explanation: why the correct answer is right (shown to students after they answer).'],['6. Save the file and upload it on the instructor page: Add questions → Upload.'],['7. Before a new question is used in a graded exam, two members should check its answer key.']]);
   how['!cols']=[{wch:100}]; XLSX.utils.book_append_sheet(wb,how,'How to fill');
-  XLSX.writeFile(wb,'PM_Prep_question_template.xlsx');
+  XLSX.writeFile(wb,'PM_Prep_'+EXAM+'_question_template.xlsx');
 }
 function normKey(k){ return String(k).toLowerCase().replace(/[^a-z0-9]/g,''); }
 function readUpload(file){
@@ -194,7 +219,7 @@ function readUpload(file){
       var wb=XLSX.read(new Uint8Array(fr.result),{type:'array'});
       var name=wb.SheetNames.indexOf('Questions')>=0?'Questions':wb.SheetNames[0];
       var raw=XLSX.utils.sheet_to_json(wb.Sheets[name],{defval:'',raw:false});
-      var map={}; TPL_COLS.forEach(function(c){ map[normKey(c)]=c; });
+      var map={}; ALL_COLS.forEach(function(c){ map[normKey(c)]=c; });
       var rows=[];
       raw.forEach(function(r,i){
         var o={_row:i+2};
@@ -205,7 +230,7 @@ function readUpload(file){
       if(!rows.length){ $('upOut').innerHTML='<p class="bad-msg">No question rows found in the sheet "'+esc(name)+'".</p>'; return; }
       if(rows.length>300){ $('upOut').innerHTML='<p class="bad-msg">'+rows.length+' rows found; upload at most 300 at a time.</p>'; return; }
       $('upOut').innerHTML='<p class="muted">Checking '+rows.length+' rows…</p>';
-      api('adminAddQuestions',TOKEN,rows,true).then(function(r){ PENDING=rows; showCheck(r); })
+      api('adminAddQuestions',TOKEN,rows,true,EXAM).then(function(r){ PENDING=rows; showCheck(r); })
         .catch(function(e){ $('upOut').innerHTML='<p class="bad-msg">'+esc(e.message)+'</p>'; });
     }catch(e){ $('upOut').innerHTML='<p class="bad-msg">This file could not be read. Save it as .xlsx from the template and try again.</p>'; }
   };
@@ -221,9 +246,9 @@ function showCheck(r){
     $('cancelAdd').onclick=function(){ PENDING=null; $('upFile').value=''; $('upOut').innerHTML=''; };
     $('confirmAdd').onclick=function(){
       this.disabled=true; this.textContent='Adding…';
-      api('adminAddQuestions',TOKEN,PENDING,false).then(function(x){
+      api('adminAddQuestions',TOKEN,PENDING,false,EXAM).then(function(x){
         PENDING=null; $('upFile').value='';
-        $('upOut').innerHTML='<p class="ok-msg">Added '+x.added+' question'+(x.added===1?'':'s')+(x.ids.length?' ('+esc(x.ids[0])+(x.ids.length>1?' – '+esc(x.ids[x.ids.length-1]):'')+')':'')+'. The bank now has '+x.bankSize+' questions; students see them in practice right away.</p>'+(x.errors.length?'<p class="note">'+x.errors.length+' row(s) were skipped.</p>':'');
+        $('upOut').innerHTML='<p class="ok-msg">Added '+x.added+' question'+(x.added===1?'':'s')+(x.ids.length?' ('+esc(x.ids[0])+(x.ids.length>1?' – '+esc(x.ids[x.ids.length-1]):'')+')':'')+'. The '+esc(x.exam||EXAM)+' bank now has '+x.bankSize+' questions; students see them in practice right away.</p>'+(x.errors.length?'<p class="note">'+x.errors.length+' row(s) were skipped.</p>':'');
       }).catch(function(e){ $('upOut').innerHTML='<p class="bad-msg">'+esc(e.message)+'</p>'; });
     };
   }
@@ -237,4 +262,3 @@ function exportCsv(which){
 </script>
 </body>
 </html>
-
